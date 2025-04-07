@@ -2,6 +2,9 @@
 
 从网络上搜集的各种JAVA面试题及知识点。
 
+已同步至gitbook：
+> https://kamphirundo.gitbook.io/repo
+
 ## JAVA面试
 
 部分JAVA面试题。
