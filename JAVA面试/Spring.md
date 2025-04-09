@@ -4,28 +4,30 @@
 
 ### @Component Bean的Name默认是什么
 
-![](http://alexali.oss-cn-guangzhou.aliyuncs.com/pasteimageintomarkdown/2025-04-01/553237788806541.png?Expires=4897071916&OSSAccessKeyId=LTAI5tBX2zkmA8G3Aw5HNqtH&Signature=Dj139iBaMdjauCpDMxLrPw7Rhzo%3D)
+![beanname](http://alexali.oss-cn-guangzhou.aliyuncs.com/pasteimageintomarkdown/2025-04-01/553237788806541.png?Expires=4897071916&OSSAccessKeyId=LTAI5tBX2zkmA8G3Aw5HNqtH&Signature=Dj139iBaMdjauCpDMxLrPw7Rhzo%3D)
 
 ---
 
 ### AutoWired 与 Resource 区别
+
 1. 来源不同  
-@Autowired 和 @Resource 来自不同的“父类”，其中 `@Autowired` 是 `Spring2.5` 定义的注解
-同时宣布支持@Resource ，而 `@Resource` 是 `Java` 定义的注解，它来自于 `JSR-250`（Java 250 规范提案）
+@Autowired 和 @Resource 来自不同的“父类”，其中 `@Autowired` 是 `Spring2.5` 定义的注解  
+而 `@Resource` 是 `Java` 定义的注解，它来自于 `JSR-250`（Java 250 规范提案）
 
 2. 依赖查找的顺序不同
    * @AutoWired注解  
    @Autowired 注解在查找要注入的 bean 时，首先会`按照类型`进行匹配。如果有多个匹配的 bean，就会根据名称进行匹配。  
    此外，可以在 @Autowired 注解中使用 @Qualifier 注解来指定要注入的bean的名称，如果不使用 @Qualifier 注解就会使用属性名。
-   
+
    ```java
    @Autowired
    @Qualifier("userService2")
    private UserService userService;
    ```
-   
+
    * @Resource注解  
    @Resource注解既没有指定name属性，也没有指定type属性，那么它会`默认按照名称`来查找对应的bean，并将其注入到被注解的属性或者方法参数中。
+
    ```java
    @Resource(name = "myBean")
    private MyBean myBean;
@@ -66,6 +68,20 @@ Spring中一个Bean的创建大概分为以下几个步骤：
 7. 初始化后，进行AOP
 
 ![](http://alexali.oss-cn-guangzhou.aliyuncs.com/pasteimageintomarkdown/2025-04-01/556237622664625.png?Expires=4897074916&OSSAccessKeyId=LTAI5tBX2zkmA8G3Aw5HNqtH&Signature=WF4186bkQgkAVH%2Ft1ypR6dfdZ90%3D)
+
+---
+
+### Spring容器启动流程是怎样的
+1. 在创建Spring容器，也就是启动Spring时：
+2. 首先会进行扫描，扫描得到所有的BeanDefinition对象，并存在一个Map中
+3. 然后筛选出非懒加载的单例BeanDefinition进行创建Bean，对于多例Bean不需要在启动过程中去进行创建，对于多例Bean会在每次获取Bean时利用BeanDefinition去创建
+4. 利用BeanDefinition创建Bean就是Bean的创建生命周期，这期间包括了合并BeanDefinition、推断构造方法、实例化、属性填充、初始化前、初始化、初始化后等步骤，其中AOP就是发生在初始化后这一步骤中
+5. 单例Bean创建完了之后，Spring会发布一个容器启动事件
+6. Spring启动结束
+7. 在源码中会更复杂，比如源码中会提供一些模板方法，让子类来实现，比如源码中还涉及到一些BeanFactoryPostProcessor和BeanPostProcessor的注册，Spring的扫描就是通过BenaFactoryPostProcessor来实现的，依赖注入就是通过BeanPostProcessor来实现的
+8. 在Spring启动过程中还会去处理@Import等注解
+
+![](http://alexali.oss-cn-guangzhou.aliyuncs.com/pasteimageintomarkdown/2025-04-09/95934290955458.png?Expires=4897782349&OSSAccessKeyId=LTAI5tBX2zkmA8G3Aw5HNqtH&Signature=Dg4GePnjClWWb%2FrZxf6iUVVdNiQ%3D)
 
 
 ---
@@ -165,9 +181,9 @@ Spring中一个Bean的创建大概分为以下几个步骤：
 
 2. 创建  
    创建 Interceptor 需要实现 org.springframework.web.servlet.HandlerInterceptor 接口，HandlerInterceptor 接口中定义了三个方法：
-  * preHandle：在 Controller 方法执行前被调用，可以对请求做预处理。该方法的返回值是一个 boolean 变量，只有当返回值为 true 时，程序才会继续向下执行。
-  * postHandle：在 Controller 方法执行结束，DispatcherServlet 进行视图渲染之前被调用，该方法内可以操作 Controller 处理后的 ModelAndView 对象。
-  * afterCompletion：在整个请求处理完成（包括视图渲染）后被调用，通常用来清理资源。
+   * preHandle：在 Controller 方法执行前被调用，可以对请求做预处理。该方法的返回值是一个 boolean 变量，只有当返回值为 true 时，程序才会继续向下执行。
+   * postHandle：在 Controller 方法执行结束，DispatcherServlet 进行视图渲染之前被调用，该方法内可以操作 Controller 处理后的 ModelAndView 对象。
+   * afterCompletion：在整个请求处理完成（包括视图渲染）后被调用，通常用来清理资源。
     注意，postHandle 方法和 afterCompletion 方法执行的前提条件是 preHandle 方法的返回值为 true。
     
      ```java
@@ -191,9 +207,9 @@ Spring中一个Bean的创建大概分为以下几个步骤：
          }
      }
      ```
-    
+
     Interceptor 需要注册到 Spring 容器才能够生效，注册的方法是在配置类中实现 WebMvcConfigurer 接口，并重写 addInterceptors 方法:
-    
+
      ```java
      @Configuration
      public class TestInterceptorConfig implements WebMvcConfigurer {
@@ -303,3 +319,39 @@ Spring中一个Bean的创建大概分为以下几个步骤：
    因为拦截器更接近业务系统，所以拦截器主要用来实现项目中的业务判断的，比如：登录判断、权限判断、日志记录等业务。 而过滤器通常是用来实现通用功能过滤的，比如：敏感词过滤、字符集编码设置、响应数据压缩等功能。
 
 ---
+
+### Spring AOP and AspectJ AOP 有什么区别
+
+1. 实现方式
+   * Spring AOP：  
+   基于代理：Spring AOP主要通过动态代理技术（如JDK动态代理和CGLIB代理）来实现。  
+   运行时织入：在运行时通过代理对象将切面逻辑插入到目标对象的方法中。  
+     > 比喻：你有一个秘书，帮你处理一些日常事务，这样你就可以专注于更重要的事情。秘书是在你需要的时候才出现的。
+   * AspectJ AOP：  
+   基于字节码操作：AspectJ AOP通过字节码操作技术（如编译时织入、类加载时织入）来实现。  
+   编译时/类加载时织入：在编译阶段或类加载阶段将切面逻辑直接插入到目标类的字节码中。  
+     > 比喻：你在建造房子的时候，就已经把电线、水管等基础设施埋好了，这样房子建好后可以直接使用这些设施。
+2. 支持的切点表达式
+   * Spring AOP：  
+   有限的切点表达式：Spring AOP支持的方法拦截主要是基于方法的调用，不能对字段访问、构造函数等进行拦截。
+   > 比喻：你只能在门口安装监控摄像头，不能在每个房间里都安装。
+   * AspectJ AOP：  
+   丰富的切点表达式：AspectJ AOP支持的方法拦截、字段访问、构造函数调用等多种切点表达式。
+   > 比喻：你可以在门口、窗户、每个房间里都安装监控摄像头。
+3. 性能
+   * Spring AOP：  
+   性能稍差：由于是运行时通过代理对象实现，每次方法调用都会有一定的开销。
+   > 比喻：每次你需要秘书帮忙的时候，秘书都需要先找到你，再开始工作。
+   * AspectJ AOP：  
+   性能更好：由于是编译时或类加载时直接修改字节码，性能更高。
+   > 比喻：你在建造房子的时候就已经把所有设施都安排好了，所以房子建好后可以直接使用，不需要额外的时间。
+4. 配置和使用
+   * Spring AOP：
+   配置简单：Spring AOP的配置相对简单，可以通过注解或XML配置来定义切面和切点。
+   > 比喻：你只需要告诉秘书你需要他做什么，秘书就会帮你做好。
+   * AspectJ AOP：
+   配置复杂：AspectJ AOP的配置相对复杂，需要编写切面类，并且可能需要额外的编译步骤。
+   > 比喻：你需要详细规划房子的设计图，然后找专业的建筑工人来建造。
+
+---
+
