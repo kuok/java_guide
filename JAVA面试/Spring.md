@@ -11,23 +11,23 @@
 ### AutoWired 与 Resource 区别
 
 1. 来源不同  
-@Autowired 和 @Resource 来自不同的“父类”，其中 `@Autowired` 是 `Spring2.5` 定义的注解  
-而 `@Resource` 是 `Java` 定义的注解，它来自于 `JSR-250`（Java 250 规范提案）
+   @Autowired 和 @Resource 来自不同的“父类”，其中 `@Autowired` 是 `Spring2.5` 定义的注解  
+   而 `@Resource` 是 `Java` 定义的注解，它来自于 `JSR-250`（Java 250 规范提案）
 
 2. 依赖查找的顺序不同
-   * @AutoWired注解  
-   @Autowired 注解在查找要注入的 bean 时，首先会`按照类型`进行匹配。如果有多个匹配的 bean，就会根据名称进行匹配。  
-   此外，可以在 @Autowired 注解中使用 @Qualifier 注解来指定要注入的bean的名称，如果不使用 @Qualifier 注解就会使用属性名。
-
+  * @AutoWired注解  
+    @Autowired 注解在查找要注入的 bean 时，首先会`按照类型`进行匹配。如果有多个匹配的 bean，就会根据名称进行匹配。  
+    此外，可以在 @Autowired 注解中使用 @Qualifier 注解来指定要注入的bean的名称，如果不使用 @Qualifier 注解就会使用属性名。
+   
    ```java
    @Autowired
    @Qualifier("userService2")
    private UserService userService;
    ```
-
-   * @Resource注解  
-   @Resource注解既没有指定name属性，也没有指定type属性，那么它会`默认按照名称`来查找对应的bean，并将其注入到被注解的属性或者方法参数中。
-
+  
+  * @Resource注解  
+    @Resource注解既没有指定name属性，也没有指定type属性，那么它会`默认按照名称`来查找对应的bean，并将其注入到被注解的属性或者方法参数中。
+   
    ```java
    @Resource(name = "myBean")
    private MyBean myBean;
@@ -38,9 +38,9 @@
 
 3. 支持的参数不同  
    @Autowired 和 @Resource 在使用时都可以设置参数，但二者支持的参数以及参数的个数完全不同，其中 @Autowired 只支持设置一个 required 的参数，而 @Resource 支持 7 个参数，支持的参数如下图所示：
-
+   
    ![](http://alexali.oss-cn-guangzhou.aliyuncs.com/pasteimageintomarkdown/2025-04-01/554076428603125.png?Expires=4897072754&OSSAccessKeyId=LTAI5tBX2zkmA8G3Aw5HNqtH&Signature=2rYZ7s2%2FhL1dhQoBMDMRtRuv10I%3D)
-
+   
    ![](http://alexali.oss-cn-guangzhou.aliyuncs.com/pasteimageintomarkdown/2025-04-01/554081898301500.png?Expires=4897072760&OSSAccessKeyId=LTAI5tBX2zkmA8G3Aw5HNqtH&Signature=gztWQXos5KtnFsXc%2Fe3yVyLeD4Y%3D)
 
 4. 依赖注入的用法支持不同  
@@ -57,15 +57,23 @@ Spring在创建一个Bean对象时，会先创建出来一个Java对象，会通
 
 ---
 
-### Bean创建的生命周期
+### Bean的生命周期
 Spring中一个Bean的创建大概分为以下几个步骤：
-1. 推断构造方法
-2. 实例化
-3. 填充属性，也就是依赖注入
-4. 处理Aware回调
-5. 初始化前，处理@PostConstruct注解
-6. 初始化，处理InitializingBean接口
-7. 初始化后，进行AOP
+
+1. 实例化
+   * 通过反射去推断构造函数进行实例化
+   * 实例工厂、 静态工厂
+2. 依赖注入（DI）
+   * 解析自动装配（byname bytype constractor none @Autowired）
+3. 初始化
+   * 调用很多Aware回调方法
+   * 调用BeanPostProcessor.postProcessBeforeInitialization
+   * 调用生命周期回调初始化方法
+   * 调用BeanPostProcessor.postProcessAfterInitialization, 如果bean实现aop则会在这里创建动态代理
+4. 使用
+5. 销毁
+   * 在spring容器关闭的时候进行调用
+   * 调用生命周期回调销毁方法
 
 ![](http://alexali.oss-cn-guangzhou.aliyuncs.com/pasteimageintomarkdown/2025-04-01/556237622664625.png?Expires=4897074916&OSSAccessKeyId=LTAI5tBX2zkmA8G3Aw5HNqtH&Signature=WF4186bkQgkAVH%2Ft1ypR6dfdZ90%3D)
 
@@ -83,6 +91,263 @@ Spring中一个Bean的创建大概分为以下几个步骤：
 
 ![](http://alexali.oss-cn-guangzhou.aliyuncs.com/pasteimageintomarkdown/2025-04-09/95934290955458.png?Expires=4897782349&OSSAccessKeyId=LTAI5tBX2zkmA8G3Aw5HNqtH&Signature=Dg4GePnjClWWb%2FrZxf6iUVVdNiQ%3D)
 
+---
+
+### Spring IoC 的实现机制
+1. **反射**：Spring使用Java的反射机制来实现动态创建和管理Bean对象。通过反射，Spring可以在运行时动态地实例化Bean对象、调用Bean的方法和设置属性值。
+2. **配置元数据**：Spring使用配置元数据来描述Bean的定义和依赖关系。配置元数据可以通过XML配置文件、注解和Java代码等方式进行定义。Spring在启动时会解析配置元数据，根据配置信息创建和管理Bean对象。
+3. **Bean定义**：Spring使用Bean定义来描述Bean的属性、依赖关系和生命周期等信息。Bean定义可以通过XML配置文件中的<bean>元素、注解和Java代码中的@Bean注解等方式进行定义。Bean定义包含了Bean的类名、作用域、构造函数参数、属性值等信息。
+4. **Bean工厂**：Spring的Bean工厂负责创建和管理Bean对象。Bean工厂可以是BeanFactory接口的实现，如DefaultListableBeanFactory。Bean工厂负责解析配置元数据，根据Bean定义创建Bean对象，并将其放入容器中进行管理。
+5. **依赖注入**：Spring使用依赖注入来解决Bean之间的依赖关系。通过依赖注入，Spring容器负责将Bean所依赖的其他Bean实例注入到它们之中。Spring使用反射和配置元数据来确定依赖关系，并在运行时进行注入。
+
+---
+
+### BeanFactory与FactoryBean的区别
+
+---
+
+#### BeanFactory
+BeanFactory，以Factory结尾，表示它是一个工厂类(接口)， 它负责生产和管理bean的一个工厂。在Spring中，BeanFactory是IOC容器的核心接口，它的职责包括：实例化、定位、配置应用程序中的对象及建立这些对象间的依赖。BeanFactory只是个接口，并不是IOC容器的具体实现，但是Spring容器给出了很多种实现，如 `DefaultListableBeanFactory`、`XmlBeanFactory`、`ApplicationContext`。
+
+包含以下功能：
+* 提供Bean的生命周期管理
+* 实现依赖注入
+* 支持Bean的装配和延迟初始化
+
+> BeanFactory是容器，管理所有Bean
+
+---
+
+#### FactoryBean
+FactoryBean 是一个特殊的 Bean，它是一个工厂对象，用于创建和管理其他 Bean 的实例。FactoryBean 接口定义了一种创建 Bean 的方式，它允许开发人员在 Bean 的创建过程中进行更多的自定义操作。通过实现 FactoryBean 接口，开发人员可以创建复杂的 Bean 实例，或者在 Bean 实例化之前进行一些额外的逻辑处理。  
+它是实现了FactoryBean<T>接口的Bean，根据该Bean的ID从BeanFactory中获取的实际上是FactoryBean的getObject()返回的对象，而不是FactoryBean本身，如果要获取FactoryBean对象，请在id前面加一个&符号来获取。
+
+FactoryBean在Spring中最为典型的一个应用就是用来创建AOP的代理对象。
+
+* 复杂对象的初始化：如JDBC连接、第三方框架对象
+* 动态代理对象创建：MyBatis中的Mapper接口代理对象就是通过FactoryBean创建的
+* 条件化Bean创建：根据条件创建不同实现的Bean
+
+> FactoryBean是特殊的Bean，用于创建复杂Bean
+
+---
+
+### Spring的三级缓存
+
+![](http://alexali.oss-cn-guangzhou.aliyuncs.com/pasteimageintomarkdown/2025-04-10/119299005951958.png?Expires=4897855998&OSSAccessKeyId=LTAI5tBX2zkmA8G3Aw5HNqtH&Signature=I30pxp0luRaMDTOCk4cCO2fjkBY%3D)
+
+
+```java
+/** Cache of singleton objects: bean name --> bean instance */
+/** 一级缓存：用于存放完全初始化好的 bean **/
+private final Map<String, Object> singletonObjects = new ConcurrentHashMap<String, Object>(256);
+
+/** Cache of early singleton objects: bean name --> bean instance */
+/** 二级缓存：存放原始的 bean 对象（尚未填充属性），用于解决循环依赖 */
+private final Map<String, Object> earlySingletonObjects = new HashMap<String, Object>(16);
+
+/** Cache of singleton factories: bean name --> ObjectFactory */
+/** 三级级缓存：存放 bean 工厂对象，用于解决循环依赖 */
+private final Map<String, ObjectFactory<?>> singletonFactories = new HashMap<String, ObjectFactory<?>>(16);
+
+/** Names of beans that are currently in creation. */
+// 这个缓存也十分重要：它表示bean创建过程中都会在里面呆着~
+// 它在Bean开始创建时放值，创建完成时会将其移出~
+private final Set<String> singletonsCurrentlyInCreation = Collections.newSetFromMap(new ConcurrentHashMap<>(16));
+
+/** Names of beans that have already been created at least once. */
+// 当这个Bean被创建完成后，会标记为这个 注意：这里是set集合 不会重复
+// 至少被创建了一次的  都会放进这里~~~~
+private final Set<String> alreadyCreated = Collections.newSetFromMap(new ConcurrentHashMap<>(256));
+```
+
+#### 二级缓存解决普通循环依赖
+
+![](http://alexali.oss-cn-guangzhou.aliyuncs.com/pasteimageintomarkdown/2025-04-10/119433962905958.png?Expires=4897856133&OSSAccessKeyId=LTAI5tBX2zkmA8G3Aw5HNqtH&Signature=tVO8o%2FPr9Kgi1IDmUkLop6%2FYQWQ%3D)
+
+可以看到，二级缓存就能解决一个循环依赖问题，但是不能解决AOP代理的循环依赖问题，因为AOP后最终放进容器中的是代理对象而不是原对象。
+
+![](http://alexali.oss-cn-guangzhou.aliyuncs.com/pasteimageintomarkdown/2025-04-10/119750807687791.png?Expires=4897856449&OSSAccessKeyId=LTAI5tBX2zkmA8G3Aw5HNqtH&Signature=d57bcOdrTaV2bUSMMXQSSm%2F3ZyQ%3D)
+
+
+继续使用二级缓存就会出现问题。
+
+![](http://alexali.oss-cn-guangzhou.aliyuncs.com/pasteimageintomarkdown/2025-04-10/119680523184458.png?Expires=4897856379&OSSAccessKeyId=LTAI5tBX2zkmA8G3Aw5HNqtH&Signature=e2I51JrgKujQyKATquPz%2F4ebhjY%3D)
+
+#### 三级缓存解决AOP循环依赖
+
+![](http://alexali.oss-cn-guangzhou.aliyuncs.com/pasteimageintomarkdown/2025-04-10/119862569458708.png?Expires=4897856562&OSSAccessKeyId=LTAI5tBX2zkmA8G3Aw5HNqtH&Signature=tAz56CTnWSy40J%2BHZDZ21%2BgdOEs%3D)
+
+#### 是否可以移除第三级缓存
+
+去掉三级缓存之后，Bean 直接创建 earlySingletonObjects， 看着好像也可以。
+如果有代理的时候，在 earlySingletonObjects 直接放代理对象就行了。
+但是会导致一个问题：**在实例化阶段就得执行后置处理器**，判断有 AnnotationAwareAspectJAutoProxyCreator 并创建代理对象。
+
+这么一想，是不是会对 Bean 的生命周期有影响。
+同样，先创建 singletonFactory 的好处就是：在真正需要实例化的时候，再使用 singletonFactory.getObject() 获取 Bean 或者 Bean 的代理。相当于是延迟实例化。
+
+#### 是否可以移除第二级缓存
+
+如果去掉了二级缓存，则需要直接在 singletonFactory.getObject() 阶段初始化完毕，并放到一级缓存中。
+
+那有这么一种场景，B 和 C 都依赖了 A。
+
+![](http://alexali.oss-cn-guangzhou.aliyuncs.com/pasteimageintomarkdown/2025-04-10/120465777399000.png?Expires=4897857164&OSSAccessKeyId=LTAI5tBX2zkmA8G3Aw5HNqtH&Signature=K9NGYoK1Ib%2BET%2Fy3iJu7VyJ5CDs%3D)
+
+
+要知道在有代理的情况下 singletonFactory.getObject() 获取的是代理对象。
+而多次调用 singletonFactory.getObject() 返回的代理对象是不同的，就会导致 B 和 C 依赖了不同的 A。
+
+#### 解决循环依赖条件
+
+在 Spring 中，只有同时满足以下两点才能解决循环依赖的问题：
+
+* **必须是单例**  
+  依赖的 Bean 必须都是单例
+  因为原型模式都需要创建新的对象，不能跟用以前的对象
+
+* **不能全是构造器注入**  
+  依赖注入的方式，必须不全是构造器注入，且 beanName 的字母顺序在前的不能是构造器注入
+  
+  > 在 Spring 中创建 Bean 分三步:
+  > * 实例化，createBeanInstance，就是 new 了个对象
+  > * 属性注入，populateBean， 就是 set 一些属性值
+  > * 初始化，initializeBean，执行一些 aware 接口中的方法，initMethod，AOP代理等
+  >
+  > 如果全是构造器注入，比如A(B b)，那表明在 new 的时候，就需要得到 B，此时需要 new B 。但是 B 也是要在构造的时候注入 A ，即B(A a)，这时候 B 需要在一个 map 中找到不完整的 A ，发现找不到。
+  > 为什么找不到？因为 A 还没 new 完呢，所以找到不完整的 A，因此如果全是构造器注入的话，那么 Spring 无法处理循环依赖。
+  
+  一个set注入，一个构造器注入能否成功？
+  
+  * 假设我们` A 是通过 set 注入 B，B 通过构造函数注入 A`，此时是成功的  
+    我们来分析下：实例化 A 之后，可以在 map 中存入 A，开始为 A 进行属性注入，发现需要 B，此时 new B，发现构造器需要 A，此时从 map 中得到 A ，B 构造完毕。
+    B 进行属性注入，初始化，然后 A 注入 B 完成属性注入，然后初始化 A。
+    整个过程很顺利完成。
+  * 假设 `A 是通过构造器注入 B，B 通过 set 注入 A`，此时是失败的  
+    我们来分析下：实例化 A，发现构造函数需要 B， 此时去实例化 B。
+    然后进行 B 的属性注入，从 map 里面找不到 A，因为 A 还没 new 成功，所以 B 也卡住了，然后就 失败
+    看到这里，仔细思考的小伙伴可能会说，可以先实例化 B 啊，往 map 里面塞入不完整的 B，这样就能成功实例化 A 了啊。  
+    但是
+  > Spring 容器是按照字母序创建 Bean 的，A 的创建永远排在 B 前面
+
+---
+
+##### Spring中Bean的顺序
+spring容器载入bean顺序是不确定的，在一定的范围内bean的加载顺序可以控制。
+spring容器载入bean虽然顺序不确定，但遵循一定的规则：
+* 按照字母顺序加载（同一文件夹下按照字母顺序；不同文件夹下，先按照文件夹命名的字母顺序加载）
+* 不同的bean声明方式不同的加载时机，顺序总结：@ComponentScan > @Import > @Bean
+  这里的ComponentScan指@ComponentScan及其子注解，Bean指的是@configuration + @bean
+* Component及其子注解申明的bean是按照字母顺序加载的
+* @configuration + @bean是按照定义的顺序依次加载的
+* @import的顺序，就是bean的加载顺序
+* 在xml中，通过<bean id="">方式声明的bean也是按照代码的编写顺序依次加载的
+* 同一类中加载顺序：Constructor >> @Autowired >> @PostConstruct >> @Bean
+* 同一类中加载顺序：静态变量 / 静态代码块 >> 构造代码块 >> 构造方法（需要特别注意的是静态代码块的执行并不是优先所有的bean加载，只是在同一个类中，静态代码块优先加载）
+
+---
+
+##### 更改加载顺序
+1. 构造方法依赖 (推荐)
+
+    ```java
+    @Component
+    public class CDemo1 {
+        private String name = "cdemo 1";
+    
+        public CDemo1(CDemo2 cDemo2) {
+            System.out.println(name);
+        }
+    }
+    @Component
+    public class CDemo2 {
+        private String name = "cdemo 2";
+    
+        public CDemo2() {
+            System.out.println(name);
+        }
+    }
+    ```
+   CDemo2在CDemo1之前被初始化。
+2. 参数注入
+
+    ```java
+    @Bean
+    public BeanA beanA(BeanB beanB) {
+        System.out.println("bean A init");
+        return new BeanA();
+    }
+    @Bean
+    public BeanB beanB() {
+        System.out.println("bean B init");
+        return new BeanB();
+    }
+    ```
+3. @DependsOn(“xxx”)
+
+    ```java
+    @Component("dependson02")
+    public class Dependson02 {
+    
+        Dependson02() {
+            System.out.println(" dependson02 Success ");
+        }
+    }
+    @Component
+    @DependsOn("dependson02")
+    public class Dependson01 {
+    
+        Dependson01() {
+            System.out.println("Dependson01 success");
+        }
+    }
+    ```
+
+4. BeanDefinitionRegistryPostProcessor接口  
+    通过实现BeanDefinitionRegistryPostProcessor接口，在postProcessBeanDefinitionRegistry方法中通过BeanDefinitionRegistry获取到所有bean的注册信息，将bean保存到LinkedHashMap中，并从BeanDefinitionRegistry中删除，然后将保存的bean定义排序后，重新再注册到BeanDefinitionRegistry中，即可实现bean加载顺序的控制。
+5. 执行顺序@Order  
+   注解@Order或者接口Ordered的作用是定义Spring IOC容器中Bean的执行顺序的优先级，而不是定义Bean的加载顺序，Bean的加载顺序不受@Order或Ordered接口的影响，@Order不控制Spring初始化顺
+    ```java
+    @Component
+    @Order(0)
+    public class Test01 {
+       ...
+    }
+    
+    @Component
+    @Order(1)
+    public class Test02 {
+       ...
+    }
+    
+    @Component
+    @Order(2)
+    public class Test03 {
+       ...
+    }
+    ```
+6. 延迟注入@Lazy  
+   在类A中使用 @Lazy 注解，将类A延迟加载，这样在启动应用程序时，Spring容器不会立即加载类A，而是在需要使用类A的时候才会进行加载。
+    ```java
+    @Component
+    public class A {
+        private final B b;
+        public A(@Lazy B b) {
+            this.b = b;
+        }
+        //...
+    }
+    
+    @Component
+    public class B {
+        private final A a;
+        public B(A a) {
+            this.a = a;
+        }
+        //...
+    }
+    ```
 
 ---
 
@@ -116,9 +381,9 @@ Spring中一个Bean的创建大概分为以下几个步骤：
 
 ### 哪些情况下会导致Spring事务失效
 1. **方法内的自调用**：Spring事务是基于AOP的，只要使用代理对象调用某个方法时，Spring事务才能生效，而在一个方法中调用使用this.xxx()调用方法时，this并不是代理对象，所以会导致事务失效。
-   * 解放办法1：把调用方法拆分到另外一个Bean中
-   * 解决办法2：自己注入自己
-   * 解决办法3：AopContext.currentProxy()+@EnableAspectJAutoProxy(exposeProxy = true)
+  * 解放办法1：把调用方法拆分到另外一个Bean中
+  * 解决办法2：自己注入自己
+  * 解决办法3：AopContext.currentProxy()+@EnableAspectJAutoProxy(exposeProxy = true)
 2. **方法是private的**：Spring事务会基于CGLIB来进行AOP，而CGLIB会基于父子类来失效，子类是代理类，父类是被代理类，如果父类中的某个方法是private的，那么子类就没有办法重写它，也就没有办法额外增加Spring事务的逻辑。
 3. **方法是final的**：原因和private是一样的，也是由于子类不能重写父类中的final的方法
 4. **单独的线程调用方法**：当Mybatis或JdbcTemplate执行SQL时，会从ThreadLocal中去获取数据库连接对象，如果开启事务的线程和执行SQL的线程是同一个，那么就能拿到数据库连接对象，如果不是同一个线程，那就拿到不到数据库连接对象，这样，Mybatis或JdbcTemplate就会自己去新建一个数据库连接用来执行SQL，此数据库连接的autocommit为true，那么执行完SQL就会提交，后续再抛异常也就不能再回滚之前已经提交了的SQL了。
@@ -181,35 +446,35 @@ Spring中一个Bean的创建大概分为以下几个步骤：
 
 2. 创建  
    创建 Interceptor 需要实现 org.springframework.web.servlet.HandlerInterceptor 接口，HandlerInterceptor 接口中定义了三个方法：
-   * preHandle：在 Controller 方法执行前被调用，可以对请求做预处理。该方法的返回值是一个 boolean 变量，只有当返回值为 true 时，程序才会继续向下执行。
-   * postHandle：在 Controller 方法执行结束，DispatcherServlet 进行视图渲染之前被调用，该方法内可以操作 Controller 处理后的 ModelAndView 对象。
-   * afterCompletion：在整个请求处理完成（包括视图渲染）后被调用，通常用来清理资源。
+  * preHandle：在 Controller 方法执行前被调用，可以对请求做预处理。该方法的返回值是一个 boolean 变量，只有当返回值为 true 时，程序才会继续向下执行。
+  * postHandle：在 Controller 方法执行结束，DispatcherServlet 进行视图渲染之前被调用，该方法内可以操作 Controller 处理后的 ModelAndView 对象。
+  * afterCompletion：在整个请求处理完成（包括视图渲染）后被调用，通常用来清理资源。
     注意，postHandle 方法和 afterCompletion 方法执行的前提条件是 preHandle 方法的返回值为 true。
     
-     ```java
-     @Component
-     public class TestInterceptor implements HandlerInterceptor {
-         @Override
-         public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-             System.out.println("Interceptor 拦截到了请求: " + request.getRequestURL());
-             return true;
-         }
-    
-         @Override
-         public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
-    
-             System.out.println("Interceptor 操作 modelAndView...");
-         }
-    
-         @Override
-         public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
-             System.out.println("Interceptor 清理资源...");
-         }
-     }
-     ```
-
-    Interceptor 需要注册到 Spring 容器才能够生效，注册的方法是在配置类中实现 WebMvcConfigurer 接口，并重写 addInterceptors 方法:
-
+    ```java
+    @Component
+    public class TestInterceptor implements HandlerInterceptor {
+        @Override
+        public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+            System.out.println("Interceptor 拦截到了请求: " + request.getRequestURL());
+            return true;
+        }
+   
+        @Override
+        public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
+   
+            System.out.println("Interceptor 操作 modelAndView...");
+        }
+   
+        @Override
+        public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+            System.out.println("Interceptor 清理资源...");
+        }
+    }
+    ```
+   
+   Interceptor 需要注册到 Spring 容器才能够生效，注册的方法是在配置类中实现 WebMvcConfigurer 接口，并重写 addInterceptors 方法:
+   
      ```java
      @Configuration
      public class TestInterceptorConfig implements WebMvcConfigurer {
@@ -323,35 +588,56 @@ Spring中一个Bean的创建大概分为以下几个步骤：
 ### Spring AOP and AspectJ AOP 有什么区别
 
 1. 实现方式
-   * Spring AOP：  
-   基于代理：Spring AOP主要通过动态代理技术（如JDK动态代理和CGLIB代理）来实现。  
-   运行时织入：在运行时通过代理对象将切面逻辑插入到目标对象的方法中。  
-     > 比喻：你有一个秘书，帮你处理一些日常事务，这样你就可以专注于更重要的事情。秘书是在你需要的时候才出现的。
-   * AspectJ AOP：  
-   基于字节码操作：AspectJ AOP通过字节码操作技术（如编译时织入、类加载时织入）来实现。  
-   编译时/类加载时织入：在编译阶段或类加载阶段将切面逻辑直接插入到目标类的字节码中。  
-     > 比喻：你在建造房子的时候，就已经把电线、水管等基础设施埋好了，这样房子建好后可以直接使用这些设施。
+  * Spring AOP：  
+    基于代理：Spring AOP主要通过动态代理技术（如JDK动态代理和CGLIB代理）来实现。  
+    运行时织入：在运行时通过代理对象将切面逻辑插入到目标对象的方法中。
+    > 比喻：你有一个秘书，帮你处理一些日常事务，这样你就可以专注于更重要的事情。秘书是在你需要的时候才出现的。
+  * AspectJ AOP：  
+    基于字节码操作：AspectJ AOP通过字节码操作技术（如编译时织入、类加载时织入）来实现。  
+    编译时/类加载时织入：在编译阶段或类加载阶段将切面逻辑直接插入到目标类的字节码中。
+    > 比喻：你在建造房子的时候，就已经把电线、水管等基础设施埋好了，这样房子建好后可以直接使用这些设施。
 2. 支持的切点表达式
-   * Spring AOP：  
-   有限的切点表达式：Spring AOP支持的方法拦截主要是基于方法的调用，不能对字段访问、构造函数等进行拦截。
+  * Spring AOP：  
+    有限的切点表达式：Spring AOP支持的方法拦截主要是基于方法的调用，不能对字段访问、构造函数等进行拦截。
    > 比喻：你只能在门口安装监控摄像头，不能在每个房间里都安装。
-   * AspectJ AOP：  
-   丰富的切点表达式：AspectJ AOP支持的方法拦截、字段访问、构造函数调用等多种切点表达式。
+  * AspectJ AOP：  
+    丰富的切点表达式：AspectJ AOP支持的方法拦截、字段访问、构造函数调用等多种切点表达式。
    > 比喻：你可以在门口、窗户、每个房间里都安装监控摄像头。
 3. 性能
-   * Spring AOP：  
-   性能稍差：由于是运行时通过代理对象实现，每次方法调用都会有一定的开销。
+  * Spring AOP：  
+    性能稍差：由于是运行时通过代理对象实现，每次方法调用都会有一定的开销。
    > 比喻：每次你需要秘书帮忙的时候，秘书都需要先找到你，再开始工作。
-   * AspectJ AOP：  
-   性能更好：由于是编译时或类加载时直接修改字节码，性能更高。
+  * AspectJ AOP：  
+    性能更好：由于是编译时或类加载时直接修改字节码，性能更高。
    > 比喻：你在建造房子的时候就已经把所有设施都安排好了，所以房子建好后可以直接使用，不需要额外的时间。
 4. 配置和使用
-   * Spring AOP：
-   配置简单：Spring AOP的配置相对简单，可以通过注解或XML配置来定义切面和切点。
+  * Spring AOP：
+    配置简单：Spring AOP的配置相对简单，可以通过注解或XML配置来定义切面和切点。
    > 比喻：你只需要告诉秘书你需要他做什么，秘书就会帮你做好。
-   * AspectJ AOP：
-   配置复杂：AspectJ AOP的配置相对复杂，需要编写切面类，并且可能需要额外的编译步骤。
+  * AspectJ AOP：
+    配置复杂：AspectJ AOP的配置相对复杂，需要编写切面类，并且可能需要额外的编译步骤。
    > 比喻：你需要详细规划房子的设计图，然后找专业的建筑工人来建造。
 
 ---
 
+### Spring 框架中都用到了哪些设计模式
+1. **简单工厂**：  
+   BeanFactory：Spring的BeanFactory充当工厂，负责根据配置信息创建Bean实例。它是一种工厂模式的应用，根据指定的类名或ID创建Bean对象。
+2. **工厂方法**：  
+   FactoryBean：FactoryBean接口允许用户自定义Bean的创建逻辑，实现了工厂方法模式。开发人员可以使用FactoryBean来创建复杂的Bean实例。
+3. **单例模式**：  
+   Bean实例：Spring默认将Bean配置为单例，确保在容器中只有一个共享的实例，这有助于节省资源和提高性能。
+4. **适配器模式**：  
+   SpringMVC中的HandlerAdapter：SpringMVC的HandlerAdapter允许不同类型的处理器适配到处理器接口，以实现统一的处理器调用。这是适配器模式的应用。
+5. **装饰器模式**：  
+   BeanWrapper：Spring的BeanWrapper允许在不修改原始Bean类的情况下添加额外的功能，这是装饰器模式的实际应用。
+6. **代理模式**：  
+   AOP底层：Spring的AOP（面向切面编程）底层通过代理模式来实现切面功能，包括JDK动态代理和CGLIB代理。
+7. **观察者模式**：  
+   Spring的事件监听：Spring的事件监听机制是观察者模式的应用，它允许组件监听和响应特定类型的事件，实现了松耦合的组件通信。
+8. **策略模式**：  
+   excludeFilters、includeFilters：Spring允许使用策略模式来定义包扫描时的过滤策略，如在@ComponentScan注解中使用的excludeFilters和includeFilters。
+9. **模板方法模式**：  
+   Spring几乎所有的外接扩展：Spring框架的许多模块和外部扩展都采用模板方法模式，例如JdbcTemplate、HibernateTemplate等。
+10. **责任链模式**：  
+    AOP的方法调用：Spring AOP通过责任链模式实现通知（Advice）的调用，确保通知按顺序执行。
