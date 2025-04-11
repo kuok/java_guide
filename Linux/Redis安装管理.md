@@ -62,7 +62,11 @@
    修改配置
    
    ```bash
-   vi redis.conf
+   vim redis.conf
+   ```
+   创建文件夹保存持久化文件以及日志
+   ```bash
+   mkdir rdb
    ```
    
    搜索功能：/+要搜索的内容，n：下一个搜索结果，N：上一个搜索结果
@@ -81,7 +85,8 @@
    # requirepass foobared注释去掉并在后加上密码（注意中间加个空格）
        requirepass foobared ---> requirepass 密码
    
-   
+   # 将日志以及持久化文件保存到rdb文件夹
+       dir ./ ---> dir /app/redis/redis-7.4.2/rdb/
 
    ```
    

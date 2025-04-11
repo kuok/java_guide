@@ -15,7 +15,8 @@
 ## 刷新DNS缓存
 
 ```bash
-sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder
+sudo dscacheutil -flushcache;
+sudo killall -HUP mDNSResponder
 ```
 
 ## MAC免密登陆SSH
@@ -77,7 +78,7 @@ sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder
     ```
 
 ## iTerm命令
->
+
 > 清除当前行：ctrl + u
 >
 > 到行首：ctrl + a
@@ -123,3 +124,52 @@ sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder
 > ⌘ + shift + h 会列出剪切板历史
 >
 > 可以在 Preferences > keys 设置全局快捷键调出 iterm，这个也可以用过 Alfred 实现
+
+---
+
+## Redis
+使用brew安装Redis
+```bash
+brew install redis
+```
+
+查看Redis信息
+```bash
+brew info redis
+```
+
+查看redis是否启动
+```bash
+ps -ef | grep redis
+```
+
+启动Redis
+```bash
+brew services start redis
+```
+
+停止Redis
+```
+brew services stop redis
+```
+
+卸载Redis
+```bash
+brew uninstall redis
+```
+
+---
+
+## MySQL
+启动
+```bash
+sudo /usr/local/mysql/support-files/mysql.server start
+```
+停止
+```bash
+sudo /usr/local/mysql/support-files/mysql.server stop
+```
+检查状态
+```bash
+sudo /usr/local/mysql/support-files/mysql.server status
+```
