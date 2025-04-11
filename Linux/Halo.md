@@ -1,8 +1,8 @@
-## Halo
+# Halo
 
 ---
 
-### 安装
+## 安装
 官方文档很详细：<https://docs.halo.run/getting-started/install/jar-file>
 
 1. 创建文件夹，然后按照官方文档继续。

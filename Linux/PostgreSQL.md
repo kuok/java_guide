@@ -1,8 +1,8 @@
-## PostgreSQL
+# PostgreSQL
 
 ---
 
-### 安装
+## 安装
 
 官网有详细脚本<https://www.postgresql.org/download/linux/redhat/>
 

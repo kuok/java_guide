@@ -1,3 +1,7 @@
+# Nginx
+
+---
+
 ## Nginx Proxy Manager
 
 官网：<https://nginxproxymanager.com/setup/>

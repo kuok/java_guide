@@ -1,8 +1,8 @@
-## MySQL
+# MySQL
 
 ---
 
-### 安装
+## 安装
 
 1. 创建文件夹，并进入文件夹
    
@@ -181,7 +181,7 @@
 
 ---
 
-#### 问题
+### 问题
 
 1. GPG Keys are configured as: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-mysql  
    遇到GPG错误通常是因为软件包的签名验证失败。这可能是由于多种原因，包括密钥过期、密钥未安装或配置错误。  

@@ -1,8 +1,8 @@
-## Nacos
+# Nacos
 
 ---
 
-### Docker部署
+## Docker部署
 
 参考<https://nacos.io/docs/v2.4/manual/admin/deployment/deployment-standalone/?spm=5238cd80.2ef5001f.0.0.3f613b7curtyBZ>
 
@@ -65,7 +65,7 @@
 
 ---
 
-### 本地部署
+## 本地部署
 
 Docker部署后一直退出，估计是太占用内存了，改为本地部署。  
 参考：<https://nacos.io/docs/latest/quickstart/quick-start/?spm=5238cd80.2ef5001f.0.0.3f613b7cGhSlhZ>

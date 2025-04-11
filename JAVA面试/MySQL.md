@@ -1,12 +1,12 @@
-## MySQL
+# MySQL
 
 ---
 
-### 索引
+## 索引
 
 ---
 
-#### 索引的种类
+### 索引的种类
 在MySQL中索引是在存储引擎层实现的，而不是在服务器层实现的，所以不同存储引擎具有不同的索引类型和实现。常见的索引分类如下：
 * 按数据结构分类：B+tree索引、Hash索引、Full-text索引。
 * 按物理存储分类：聚簇索引索引、非聚簇索引。
@@ -15,15 +15,11 @@
 
 ---
 
-
-
----
-
-#### MySQL 为什么选择B+树作为底层数据结构
+### MySQL 为什么选择B+树作为底层数据结构
 
 ---
 
-##### 二叉树
+#### 二叉树
 
 二叉搜索树是遵守二分搜索法实现的一种数据结构，它具有下面特点：
 
@@ -40,7 +36,7 @@
 
 ---
 
-##### 红黑树
+#### 红黑树
 
 相比于二叉树，红黑树则进一步做了优化，它是一种自适应的平衡树，会根据插入的节点数量以及节点信息，自动调整树结构来维持平衡。
 ![](http://alexali.oss-cn-guangzhou.aliyuncs.com/pasteimageintomarkdown/2025-03-25/286441783346375.gif?Expires=4896514583&OSSAccessKeyId=LTAI5tBX2zkmA8G3Aw5HNqtH&Signature=0AZPe8zsiAUbhihtSbp7YbIDPa8%3D)
@@ -53,7 +49,7 @@
 
 ---
 
-##### B-Tree
+#### B-Tree
 
 B树和红黑树相比，其单节点可容纳多个数据，就能在很大程度上改善其性能，使B树的树高远远小于红黑树的高度。
 ![](http://alexali.oss-cn-guangzhou.aliyuncs.com/pasteimageintomarkdown/2025-03-25/286555517405250.gif?Expires=4896514697&OSSAccessKeyId=LTAI5tBX2zkmA8G3Aw5HNqtH&Signature=j4GENjoZTnd8%2F%2BK0M%2Bdy%2FeVMTiI%3D)
@@ -65,7 +61,7 @@ B树和红黑树相比，其单节点可容纳多个数据，就能在很大程�
 
 ---
 
-##### B+Tree
+#### B+Tree
 
 B+树是在B树的基础进一步优化，一方面节点分为了叶节点和叶子节点两类，另一方面叶子节点之间存在单向链表指针。
 ![](http://alexali.oss-cn-guangzhou.aliyuncs.com/pasteimageintomarkdown/2025-03-25/286682856301583.gif?Expires=4896514824&OSSAccessKeyId=LTAI5tBX2zkmA8G3Aw5HNqtH&Signature=BQHm9ZXEkxUFoM4kSqRNRQp6H9k%3D)
@@ -80,7 +76,7 @@ B+树相比于B树叶子节点之间多了个单项指针，当需要做范围�
 
 ---
 
-##### Hash索引
+#### Hash索引
 在存储引擎中，Memory引擎支持Hash索引  
 Hash索引其实有点像Java中的HashMap底层的数据结构，他也有很多的槽，存的也是键值对，键值为索引列，值为数据的这条数据的行指针，通过行指针就可以找到数据
 假设现在user表用Memory存储引擎，对name字段建立Hash索引，表中插入三条数据
@@ -91,7 +87,7 @@ Hash索引其实有点像Java中的HashMap底层的数据结构，他也有很�
 
 ---
 
-#### 聚簇索引与非聚簇索引索引
+### 聚簇索引与非聚簇索引索引
 按物理存储分类：InnoDB的存储方式是聚集索引，MyISAM的存储方式是非聚集索引。
 ![](http://alexali.oss-cn-guangzhou.aliyuncs.com/pasteimageintomarkdown/2025-03-30/478911637526291.png?Expires=4896886398&OSSAccessKeyId=LTAI5tBX2zkmA8G3Aw5HNqtH&Signature=%2FjHV8LvtyiBPBM4UbojdB8xCOsg%3D)
 ![](http://alexali.oss-cn-guangzhou.aliyuncs.com/pasteimageintomarkdown/2025-03-30/478926376348583.png?Expires=4896886413&OSSAccessKeyId=LTAI5tBX2zkmA8G3Aw5HNqtH&Signature=fW%2BOCPi8IabR1t7zhEJzU0U6bok%3D)
@@ -110,7 +106,7 @@ Hash索引其实有点像Java中的HashMap底层的数据结构，他也有很�
 
 ---
 
-#### 二级索引
+### 二级索引
 在MySQL中，创建一张表时会默认为主键创建聚簇索引，B+树将表中所有的数据组织起来，即数据就是索引主键所以在InnoDB里，主键索引也被称为聚簇索引，索引的叶子节点存的是整行数据。而除了聚簇索引以外的所有索引都称为二级索引，二级索引的叶子节点内容是主键的值。
 
 ![](http://alexali.oss-cn-guangzhou.aliyuncs.com/pasteimageintomarkdown/2025-03-30/479193895784458.png?Expires=4896886680&OSSAccessKeyId=LTAI5tBX2zkmA8G3Aw5HNqtH&Signature=2bwUYrFQs2alnLYdjEmRuLZSm0Y%3D)
@@ -119,7 +115,7 @@ Hash索引其实有点像Java中的HashMap底层的数据结构，他也有很�
 
 ---
 
-#### 回表
+### 回表
 这里假设对name字段创建了一个索引，执行下面这条sql 则需要进行回表:
 ```sql
 SELECT * FROM users WHERE age=35;
@@ -131,7 +127,7 @@ SELECT * FROM users WHERE age=35;
 
 ---
 
-#### 覆盖索引
+### 覆盖索引
 当执行select *  from `users` where age = 35;这条sql的时候，会先从索引页中查出来age = 35;对应的主键id，之后再回表，到聚簇索引中查询其它字段的值。
 ```sql
 select id from `users` where age = 35;
@@ -140,7 +136,7 @@ select id from `users` where age = 35;
 
 ---
 
-#### 单列索引与联合索引
+### 单列索引与联合索引
 单列索引：
 ```sql
 ALTER TABLE `test`.`user`  ADD INDEX(`name`);
@@ -167,7 +163,7 @@ B:如果是(col1,col2,col3)联合索引,通过三列索引筛选出1000w*10%*10%
 
 ---
 
-#### 索引下推
+### 索引下推
 索引下推（INDEX CONDITION PUSHDOWN，简称 ICP）是在 MySQL 5.6 针对扫描二级索引的一项优化改进。总的来说是通过把索引过滤条件下推到存储引擎，来减少 MySQL 存储引擎访问基表的次数以及 MySQL 服务层访问存储引擎的次数。  
 减少回表次数，直接在存储层判断，而不用回表去取得数据判断，相当于是范围版的覆盖索引。
 
@@ -207,7 +203,7 @@ set optimizer_switch="index_condition_pushdown=on";
 ```
 ---
 
-#### 索引合并
+### 索引合并
 索引合并（index merge）是从MySQL5.1开始引入的索引优化机制，在之前的MySQL版本中，一条sql多个查询条件只能使用一个索引，但是引入了索引合并机制之后，MySQL在某些特殊的情况下会扫描多个索引，然后将扫描结果进行合并
 
 结果合并会为下面三种情况：
@@ -230,7 +226,7 @@ select * from `user` where name = '张三' and age= 22;
 
 ---
 
-#### MySQL索引失效场景
+### MySQL索引失效场景
 1. 对索引使用左或者左右模糊匹配  
     在使用LIKE关键字进行模糊匹配时，如`LIKE '%xx'`或`LIKE '%xx%'`，都会导致索引失效，从而引发全表扫描。  
     ```sql
@@ -308,7 +304,7 @@ select * from `user` where name = '张三' and age= 22;
 
 ---
 
-### InnoDB和MyISAM
+## InnoDB和MyISAM
 * **索引（聚簇索引和非聚簇索引）**：  
 InnoDB 是聚集索引，数据文件是和索引绑在一起的，必须要有主键，通过主键索引效率很高，但是辅助索引需要两次查询，先查询到主键，然后再通过主键查询到数据。因此，主键不应该过大，否则其他索引也会很大。而 MyISAM 是非聚集索引，数据文件是分离的，索引保存的是数据文件的指针，主键索引和辅助索引是独立的。
 
@@ -325,11 +321,11 @@ InnoDB 不保存表的具体行数，执行 select count(*) from table 时需要
 
 ---
 
-### Explain
+## Explain
 
 ---
 
-#### Explain作用
+### Explain作用
 * 表的读取顺序
 * SQL执行时查询操作类型
 * 可以使用哪些索引
@@ -339,7 +335,7 @@ InnoDB 不保存表的具体行数，执行 select count(*) from table 时需要
 
 ---
 
-#### Explain用法
+### Explain用法
 ![](http://alexali.oss-cn-guangzhou.aliyuncs.com/pasteimageintomarkdown/2025-03-30/481407017200625.png?Expires=4896888893&OSSAccessKeyId=LTAI5tBX2zkmA8G3Aw5HNqtH&Signature=ANesPulWNSmREZ6Oop8rnYiD80M%3D)
 
 | 列名            | 含义                            |
@@ -359,7 +355,7 @@ InnoDB 不保存表的具体行数，执行 select count(*) from table 时需要
 
 ---
 
-##### id列：每个select都有一个对应的id号，并且是从1开始自增的。
+#### id列：每个select都有一个对应的id号，并且是从1开始自增的。
 * 如果id序号相同，从上往下执行。
 * 如果id序号不同，序号大先执行。
 * 如果两种都存在，先执行序号大，在同级从上往下执行。
@@ -367,7 +363,7 @@ InnoDB 不保存表的具体行数，执行 select count(*) from table 时需要
 
 ---
 
-##### select_type列：表示查询语句执行的查询操作类型
+#### select_type列：表示查询语句执行的查询操作类型
 1. simple：简单select，不包括union与子查询
     ```sql
     Explain select * from users inner join orders on users.id = orders.user_id;
@@ -451,16 +447,16 @@ InnoDB 不保存表的具体行数，执行 select count(*) from table 时需要
 
 ---
 
-##### table列：查询所涉及的表名。如果有多个表，将显示多行记录
+#### table列：查询所涉及的表名。如果有多个表，将显示多行记录
 
 ---
 
-##### partitions列：表分区情况
+#### partitions列：表分区情况
 查询语句所涉及的表的分区情况。具体来说，它会显示出查询语句在哪些分区上执行，以及是否使用了分区裁剪等信息。如果没有分区，该项为NULL。
 
 ---
 
-##### type列：查询所使用的访问类型
+#### type列：查询所使用的访问类型
 效率从高到低分别为：system > const > eq_ref > ref > fulltext > ref_or_null > range > index > ALL，一般来说保证range级别，最好能达到ref级别。
 
 * NULL：MySQL在优化过程中分解语句就已经可以获取到结果，执行时甚至不用访问表或索引。
@@ -552,15 +548,15 @@ InnoDB 不保存表的具体行数，执行 select count(*) from table 时需要
 
 ---
 
-##### possible_keys列：表示在查询中可能使用到某个索引或多个索引；如果没有选择索引，显示NULL
+#### possible_keys列：表示在查询中可能使用到某个索引或多个索引；如果没有选择索引，显示NULL
 
 ---
 
-##### key列：表示在查询中实际使用的索引，如果没有使用索引，显示NULL。
+#### key列：表示在查询中实际使用的索引，如果没有使用索引，显示NULL。
 
 ---
 
-##### key_len列：表示当优化器决定使用某个索引执行查询时，该索引记录的最大长度（主要使用在联合索引）
+#### key_len列：表示当优化器决定使用某个索引执行查询时，该索引记录的最大长度（主要使用在联合索引）
 联合索引可以通过这个值算出具体使用了索引中的哪些列。
 ```sql
 explain 
@@ -587,7 +583,7 @@ datetime：8字节
 
 ---
 
-##### ref列：表示将哪个字段或常量和key列所使用的字段进行比较。
+#### ref列：表示将哪个字段或常量和key列所使用的字段进行比较。
 当使用索引列等值查询时，与索引列进行等值匹配的对象信息。
 ```sql
 //常量
@@ -615,11 +611,11 @@ select users.* from users inner join orders on users.id = trim(orders.id);
 
 ---
 
-##### rows列：全表扫描时表示需要扫描表的行数估计值；索引扫描时表示扫描索引的行数估计值；值越小越好（不是结果集中的行数）
+#### rows列：全表扫描时表示需要扫描表的行数估计值；索引扫描时表示扫描索引的行数估计值；值越小越好（不是结果集中的行数）
 
 ---
 
-##### filtered列：表示符合查询条件的数据百分比。可以使用rows * filtered/100计算出与explain前一个表进行连接的行数。
+#### filtered列：表示符合查询条件的数据百分比。可以使用rows * filtered/100计算出与explain前一个表进行连接的行数。
 前一个表指 explain 中的id值比当前表id值小的表，id相同的时候指后执行的表。
 ```sql
 explain
@@ -630,7 +626,7 @@ select users.* from users inner join orders on users.id = orders.id;
 
 ---
 
-##### Extra列：SQL执行查询的一些额外信息
+#### Extra列：SQL执行查询的一些额外信息
 * Using Index：使用非主键索引树就可以查询所需要的数据。一般是覆盖索引，即查询列都包含在辅助索引树叶子节点中，不需要回表查询。
   ```sql
   explain
@@ -689,7 +685,7 @@ select users.* from users inner join orders on users.id = orders.id;
 
 ---
 
-### 慢SQL优化
+## 慢SQL优化
 1. **避免使用`select *`**  
     查看执行计划，`select *` 走全表扫描，没有用到任何索引，查询效率非常低；查询列都是索引列那么这些列被称为覆盖索引。
     * 查询时需要先将星号解析成表的所有字段然后在查询，增加查询解析器的成本；
@@ -756,7 +752,7 @@ select users.* from users inner join orders on users.id = orders.id;
 
 ---
 
-### 深分页优化方案
+## 深分页优化方案
 MySQL通过Limit关键字实现分页查询，语法如下：
 ```sql
 SELECT column_name(s) FROM table_name Limit offset, row_count;
@@ -787,11 +783,11 @@ select * from table_name inner join ( select id from table_name where (user = xx
 
 ---
 
-### NULL 值的 5 大致命陷阱及解决方案
+## NULL 值的 5 大致命陷阱及解决方案
 
 ---
 
-#### COUNT/DISTINCT 数据丢失
+### COUNT/DISTINCT 数据丢失
 `COUNT` 是 MySQL 中常用的统计函数，但当字段值为 NULL 时，`COUNT(column)` 会忽略这些记录，导致统计结果不准确。
 ```sql
 SELECT COUNT(name) AS name_count FROM person;
@@ -812,7 +808,7 @@ SELECT COUNT(DISTINCT name, mobile) AS distinct_count FROM person;
 
 ---
 
-#### NULL 对比结果为未知（false）
+### NULL 对比结果为未知（false）
 在使用非等于查询（`<>` 或 `!=`）时，NULL 值的记录会被忽略。
 ```sql
 SELECT * FROM person WHERE name != 'Alex';
@@ -824,7 +820,7 @@ SELECT * FROM person WHERE name != 'Alex';
 
 ---
 
-#### NULL 值运算都为 NULL
+### NULL 值运算都为 NULL
 在使用 NULL 值进行运算时，比如加减乘除，拼接等等 最终的结果都为 NULL
 ```sql
 SELECT id,concat(name,'name') FROM person;
@@ -836,7 +832,7 @@ SELECT id,concat(name,'name') FROM person;
 
 ---
 
-#### 聚合空指针异常
+### 聚合空指针异常
 在使用聚合函数（如 SUM、AVG）时，如果字段值为 NULL，查询结果也会为 NULL，而不是预期的 0。这可能导致程序在处理结果时出现空指针异常。
 ```sql
 SELECT SUM(salary) AS total_salary FROM employee WHERE id >= 3;
@@ -848,7 +844,7 @@ SELECT SUM(salary) AS total_salary FROM employee WHERE id >= 3;
 
 ---
 
-#### Group By Order By 会统计 NULL 值
+### Group By Order By 会统计 NULL 值
 在使用 group by 与 order by 时，不会剔除 NULL，会将 NULL 作为最小值
 ```sql
 SELECT * FROM person order by name desc;
@@ -860,7 +856,7 @@ SELECT * FROM person order by name desc;
 
 ---
 
-### Binlog有几种录入格式与区别
+## Binlog有几种录入格式与区别
 * **Statement**格式  
   将SQL语句本身记录到Binlog中。记录的是在主库上执行的SQL语句，从库通过解析并执行相同的SQL来达到复制的目的。  
   在某些情况下，由于执行计划或函数等因素的影响，相同的SQL语句在主从库上执行结果可能不一致，导致复制错误。简单、易读，节省存储空间。
@@ -873,7 +869,7 @@ SELECT * FROM person order by name desc;
 
 ---
 
-### NOT IN 为什么不会返回任何匹配 NULL 值的行
+## NOT IN 为什么不会返回任何匹配 NULL 值的行
 这个问题涉及到 SQL 中的三值逻辑，即真（TRUE）、假（FALSE）和未知（UNKNOWN）。
 
 当你使用 NOT IN 条件时，如果其中包含 NULL 值，这会导致整个条件的结果不确定。这是因为 SQL 中的比较操作符（如 IN、NOT IN、=, !=等）对于 NULL 的处理方式是特殊的。具体来说：
@@ -887,11 +883,11 @@ SELECT * FROM person order by name desc;
 
 ---
 
-### MySQL事务
+## MySQL事务
 
 ---
 
-#### 事务特性
+### 事务特性
 * **原子性（Atomicity）**：事务是最小的执行单位，不允许分割。事务的原子性确保动作要么全部完成，要么全不执行，不会出现部分执行的情况。
 * **一致性（Consistency）**：执行事务前后，数据保持一致，多个事务对同一个数据读取的结果是相同的。
 * **隔离性（Isolation）**：并发访问数据库时，事务的执行不会受到其他事务的干扰，即每个事务都应该像独立运行一样。
@@ -899,7 +895,7 @@ SELECT * FROM person order by name desc;
 
 ---
 
-#### 事务隔离级别
+### 事务隔离级别
 * **读未提交（read-uncommitted）**：最低的隔离级别，允许读取尚未提交的数据变更。可能会导致脏读、幻读或不可重复读。
 * **读已提交（read-committed）**：允许读取并发事务已经提交的数据。可能会导致幻读或不可重复读。
 * **可重复读（repeatable-read）**：同一字段的多次读取结果都是一致的，除非数据是被本身事务自己所修改。可能会导致幻读。
@@ -907,7 +903,7 @@ SELECT * FROM person order by name desc;
 
 ---
 
-#### 事务隔离问题
+### 事务隔离问题
 * **脏读（Dirty Reads）**：事务A读取到了事务B已经修改但尚未提交的数据。
   * 事务A修改balance并且不提交事务，事务B读取balance值为900；
   * 如果此时事务A回滚数据，事务B读取balance值为1000（脏读）；
@@ -921,7 +917,7 @@ SELECT * FROM person order by name desc;
 
 ---
 
-### MVCC机制的核心原理
+## MVCC机制的核心原理
 MVCC全称（多版本并发控制），本质就是通过一种乐观锁的思想，维护数据的**多个版本**，以减少数据读写操锁的冲突，做到即使有读写冲突时也能做到不加锁，非阻塞并发读而这个读指的就是**快照读** , 而非**当前读**，这样就可以提高了 MySQL 的事务并发性能。
 
 首先MySQL InnoDB存储引擎需要支持一条数据可以保留多个历史版本。  
@@ -957,7 +953,7 @@ MVCC全称（多版本并发控制），本质就是通过一种乐观锁的思�
 
 ---
 
-### 为什么MySQL要默认使用RR隔离级别
+## 为什么MySQL要默认使用RR隔离级别
 Oracle的默认隔离级别是RC，而MySQL的默认隔离级别是RR。
 
 主要是因为MySQL在主从复制的过程是通过bin log 进行数据同步的，而MySQL早期只有statement这种bin log格式，这种格式下，bin log记录的是SQL语句的原文。
@@ -968,16 +964,16 @@ Oracle的默认隔离级别是RC，而MySQL的默认隔离级别是RR。
 
 ---
 
-### MySQL 自增主键值一定是连续的吗
+## MySQL 自增主键值一定是连续的吗
 
-#### 自增值存储机制
+### 自增值存储机制
 1. MyISAM 引擎的自增值保存在数据文件中。
 2. Innodb 引擎在 MySQL 5.7 及之前的版本，自增值保存在内存里。每次重启后，第一次打开表的时候，都会去找自增值的最大值 max(id)，然后将 max(id) + 1 作为这个表当前的自增值。
 3. 在 MySQL 8.0 版本，将自增值的变更记录在了 redo log 中，重启的时候依靠 redo log 恢复重启之前的值。
 
 ---
 
-#### 自增值修改机制
+### 自增值修改机制
 * 如果ID字段未指定具体的值，则将当前AUTO_INCREMENT值并将其填入自增字段，并生成新的自增值
 * 如果ID字段已指定具体的值，则直接使用指定的值作为 ID 字段的值，而不会生成新的 AUTO_INCREMENT 值。
   * 如果插入值小于当前自增值，那么直接使用插入值填入ID字段，自增值不变；
@@ -986,7 +982,7 @@ Oracle的默认隔离级别是RC，而MySQL的默认隔离级别是RR。
 
 ---
 
-#### 导致自增值不连续的原因
+### 导致自增值不连续的原因
 1. 唯一键冲突
     > 比如increnment_test中已经存在了col1为3的记录，我们继续插入col1为3的记录，此时会出现唯一键冲突插入报错，但是没有将自增值再改回去。重新插入col1为4的值，此时对应的id为5；
 2. 事务回滚
@@ -1006,7 +1002,7 @@ MySQL 8.0中的改进
 > 减少事务回滚导致的ID浪费：在MySQL 8.0中，通过改进事务管理和自增ID的分配逻辑，尽量减少了由于事务回滚而导致的自增ID浪费现象。这意味着即使在一个批量插入操作中只有部分记录成功插入，也不会像以前那样大量浪费未使用的自增ID。
 ---
 
-### MySQL表设计经验
+## MySQL表设计经验
 * 命名规范
   > 数据库表名、字段名、索引名等都需要命名规范。命名可读性要高，尽量使用英文，采用驼峰或者下划线分割的方式，让人见名知意。
 * 选择合适的字段类型
@@ -1080,7 +1076,7 @@ MySQL 8.0中的改进
 
 ---
 
-### 分库分表下如何实现精准分页
+## 分库分表下如何实现精准分页
 互联网中许多业务都需要进行分页拉取数据，比如电商商城系统的订单列表、贴吧社区系统的帖子回复、以及手机APP消息列表等。  
 这些业务场景通常具有以下共性：数据量大、使用业务主键ID、分页排序通常不是按照主键排序，而是按照创建时间排序。  
 在数据量较小的情况下，可以通过在排序字段时间上建立索引，利用SQL提供的offset/limit功能来满足分页查询需求。  
@@ -1095,7 +1091,7 @@ select * from t_order order by time asc limit 1000,10;
 
 ---
 
-#### 全局查询法
+### 全局查询法
 
 要在每个表中将前两页的数据全部查询出来，即每个库找出第0-1010条数据，然后在内存中再次重新排序，最后从中取出数据，这就是全局查询法。
 
@@ -1111,7 +1107,7 @@ select * from t_order_2 order by time asc limit 0,1010;
 
 ---
 
-#### 禁止跳页法
+### 禁止跳页法
 
 数据量很大时，可以禁止跳页查询，只提供下一页的查询方法。  
 查询第二页的时候可以将上一页的最大值10010作为查询条件，此时的两个表中的SQL改写：
@@ -1130,7 +1126,7 @@ select * from t_order_2 where time>10010 order by time asc limit 10;
 
 ---
 
-#### 允许数据精度损失  
+### 允许数据精度损失  
 数据库分库-数据均衡原理
 > 使用 partition key 进行分库，在数据量较大，数据分布足够随机的情况下，各分库所有非 partition key 属性，在各个分库上的数据分布，统计概率情况是一致的。
 > 
@@ -1148,7 +1144,7 @@ select * from t_order_2 order by time asc limit 500,5;
 
 ---
 
-#### 二次查询法
+### 二次查询法
 > 这是网上大部份教程的方法，但实际上这是错误的。  
 > 同步于 https://zhuanlan.zhihu.com/p/1888471384864309385
 > 
@@ -1211,7 +1207,7 @@ select * from t_order_2 order by time asc limit 500,5;
 
 ---
 
-#### 三次查询法
+### 三次查询法
 > 第一次查询，大概确定offset为1000的数据；  
 > 第二次查询，精确定位`time_min`的offset；  
 > 第三次查询，根据`time_min`找到数据；  
@@ -1242,7 +1238,7 @@ select * from t_order order by time where time > time_min limit 16;
 
 ---
 
-### 加密后的数据该如何支持模糊查询
+## 加密后的数据该如何支持模糊查询
 在日常工作中，我们经常会有一些模糊查询的条件，比如说按照手机号模糊查询，或者是身份证号码。正常情况下我们可以使用模糊查询
 ```sql
 select * from user where mobile like %123%
@@ -1260,7 +1256,7 @@ select * from user where mobile like %123%
 
 ---
 
-### count（*）很慢，具体如何提升性能
+## count（*）很慢，具体如何提升性能
 1. **查询系统表**
    如果业务需要的统计结果不需要特别精确，可以查询系统表 information_schema.tables，这个存在误差但查询非常快。
     ```sql
@@ -1291,7 +1287,7 @@ select * from user where mobile like %123%
 
 ---
 
-### MySQL 8的索引跳跃扫描是什么
+## MySQL 8的索引跳跃扫描是什么
 MySQL中的索引跳跃扫描（Skip Scan）是一种优化策略，旨在提高在特定条件下对复合索引的利用效率。尽管MySQL并没有明确标记这项技术为"Skip Scan"功能，但通过其优化器的改进，特别是在MySQL 8.0.13及其后的版本中，MySQL可以在某些条件下实现类似Skip Scan的效果。让我们通过一个具体示例来说明其概念和潜在应用。
 
 假设有一个包含以下数据结构的表employees：
