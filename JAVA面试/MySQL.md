@@ -226,6 +226,38 @@ select * from `user` where name = '张三' and age= 22;
 
 ---
 
+### MySQL 8的索引跳跃扫描是什么
+MySQL中的索引跳跃扫描（Skip Scan）是一种优化策略，旨在提高在特定条件下对复合索引的利用效率。尽管MySQL并没有明确标记这项技术为"Skip Scan"功能，但通过其优化器的改进，特别是在MySQL 8.0.13及其后的版本中，MySQL可以在某些条件下实现类似Skip Scan的效果。让我们通过一个具体示例来说明其概念和潜在应用。
+
+假设有一个包含以下数据结构的表employees：
+
+| ID | Department | Position  |
+|----|------------|-----------|
+| 1  | Sales      | Manager   |
+| 2  | Sales      | Executive |
+| 3  | HR         | Manager   |
+| 4  | HR         | Executive |
+| 5  | IT         | Manager   |
+| 6  | IT         | Executive |
+
+假设我们希望查找所有Manager职位的员工：
+
+* 传统索引处理  
+  如果正常按索引(Department, Position)的顺序使用，理想情况下需要首先给出Department条件，以充分利用索引优势，但本查询并没有提供对Department的条件。
+* 跳跃扫描的优化实现（概念性）
+  1. **分区扫描：**  
+     将索引按Department的唯一值进行分割。每个分区相当于不同的部门，比如Sales、HR、IT。
+  2. **应用条件：**  
+     对每个Department分区中的Position行进行扫描，即跳跃扫描中仅搜索Position = 'Manager'的员工。
+  3. **跳过无关分区：**  
+     由于Position = 'Manager'限定，我们只在每个Department的分区中寻找匹配的Position，而不是对整个表进行扫描。
+
+
+> 虽然MySQL索引跳跃扫描概念上并不是一个独立标识的特性，但此类索引优化策略在新版MySQL中可能通过改进的索引条件推送和查询优化器来实现。它潜在地减少读取和滤除不必要数据的开销。
+> 这种策略在数据有较低基数（即Department的唯一值少）的场景中特别有效，因为跳跃的次数减少，提高了效率。可通过 EXPLAIN 检查特定查询的实际执行计划以确认优化的应用。
+
+---
+
 ### MySQL索引失效场景
 1. 对索引使用左或者左右模糊匹配  
     在使用LIKE关键字进行模糊匹配时，如`LIKE '%xx'`或`LIKE '%xx%'`，都会导致索引失效，从而引发全表扫描。  
@@ -1286,37 +1318,3 @@ select * from user where mobile like %123%
    当我们在数据表插入一条记录的同时，将计数表中的计数字段 + 1。也就是说，在新增和删除操作时，我们需要额外维护这个计数表。
 
 ---
-
-## MySQL 8的索引跳跃扫描是什么
-MySQL中的索引跳跃扫描（Skip Scan）是一种优化策略，旨在提高在特定条件下对复合索引的利用效率。尽管MySQL并没有明确标记这项技术为"Skip Scan"功能，但通过其优化器的改进，特别是在MySQL 8.0.13及其后的版本中，MySQL可以在某些条件下实现类似Skip Scan的效果。让我们通过一个具体示例来说明其概念和潜在应用。
-
-假设有一个包含以下数据结构的表employees：
-
-| ID | Department | Position  |
-|----|------------|-----------|
-| 1  | Sales      | Manager   |
-| 2  | Sales      | Executive |
-| 3  | HR         | Manager   |
-| 4  | HR         | Executive |
-| 5  | IT         | Manager   |
-| 6  | IT         | Executive |
-
-假设我们希望查找所有Manager职位的员工：
-
-* 传统索引处理  
-  如果正常按索引(Department, Position)的顺序使用，理想情况下需要首先给出Department条件，以充分利用索引优势，但本查询并没有提供对Department的条件。
-* 跳跃扫描的优化实现（概念性）
-  1. **分区扫描：**  
-  将索引按Department的唯一值进行分割。每个分区相当于不同的部门，比如Sales、HR、IT。
-  2. **应用条件：**  
-  对每个Department分区中的Position行进行扫描，即跳跃扫描中仅搜索Position = 'Manager'的员工。
-  3. **跳过无关分区：**  
-  由于Position = 'Manager'限定，我们只在每个Department的分区中寻找匹配的Position，而不是对整个表进行扫描。
-
-
-> 虽然MySQL索引跳跃扫描概念上并不是一个独立标识的特性，但此类索引优化策略在新版MySQL中可能通过改进的索引条件推送和查询优化器来实现。它潜在地减少读取和滤除不必要数据的开销。
-> 这种策略在数据有较低基数（即Department的唯一值少）的场景中特别有效，因为跳跃的次数减少，提高了效率。可通过 EXPLAIN 检查特定查询的实际执行计划以确认优化的应用。
-
----
-
-
