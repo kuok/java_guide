@@ -2,6 +2,40 @@
 
 ---
 
+### Nacos的服务注册表结构
+Nacos采用了数据的分级存储模型，最外层是Namespace，用来隔离环境。然后是Group，用来对服务分组。接下来就是服务（Service）了，一个服务包含多个实例，但是可能处于不同机房，因此Service下有多个集群（Cluster），Cluster下是不同的实例（Instance）。
+对应到Java代码中，Nacos采用了一个多层的Map来表示。结构为Map<String, Map<String, Service>>，其中最外层Map的key就是namespaceId，值是一个Map。内层Map的key是group拼接serviceName，值是Service对象。Service对象内部又是一个Map，key是集群名称，值是Cluster对象。而Cluster对象内部维护了Instance的集合。
+
+#### 层级结构
+
+```text
+Namespace（命名空间）
+└── Group（分组）
+    └── Service（服务）
+        ├── Cluster（集群）
+        │   ├── Instance 1（实例）
+        │   └── Instance 2
+        └── Cluster 2
+            └── Instance 3
+```
+1. Namespace（命名空间）  
+   * 作用：环境隔离（如 dev/test/prod）。  
+   * 特点：不同命名空间的服务完全隔离，需指定命名空间才能访问。
+2. Group（分组）  
+   * 作用：逻辑分组（如按业务模块分为 order-group/user-group）。  
+   * 特点：同一命名空间内，服务按 Group 归类，默认分组为 DEFAULT_GROUP。
+3. Service（服务）  
+   * 作用：标识一个具体的服务（如 user-service）。  
+   * 唯一性：由 Namespace + Group + ServiceName 唯一确定。
+4. Cluster（集群）  
+   * 作用：物理/逻辑集群划分（如按机房分 cluster-shanghai/cluster-beijing）。  
+   * 路由策略：支持按集群优先路由，提升容灾能力。
+5. Instance（实例）  
+   * 核心信息：IP、端口、健康状态、元数据（Metadata）。  
+   * 健康检查：Nacos 通过心跳机制动态维护实例状态（健康/不健康）。
+
+---
+
 ## Nacos特点
 
 1. **动态服务发现**：Nacos使服务更容易注册，并通过DNS或HTTP接口发现其他服务。Nacos能够实现服务的动态发现，使得在运行时可以方便地添加或删除服务实例，而无需修改代码或重新启动应用。
