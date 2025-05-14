@@ -67,16 +67,178 @@ headers 匹配 AMQP 消息的 header 而不是路由键，此外 headers 交换�
 * 生产者发送消息到 RabbitMQ 服务器的过程中出现消息丢失。 可能是网络波动未收到消息，又或者是服务器宕机。
 * RabbitMQ 服务器消息持久化出现消息丢失。 消息发送到 RabbitMQ 之后，未能及时存储完成持久化，RabbitMQ 服务器出现宕机重启，消息出现丢失。
 * 消费者拉取消息过程以及拿到消息后出现消息丢失。 消费者从 RabbitMQ 服务器获取到消息过程出现网络波动等问题可能出现消息丢失；消费者拿到消息后但是消费者未能正常消费，导致丢失，可能是消费者出现处理异常又或者是消费者宕机。
+
 针对上述三种消息丢失场景，RabbitMQ 提供了相应的解决方案，confirm 消息确认机制（生产者），消息持久化机制（RabbitMQ 服务），ACK 事务机制（消费者）
 
 ---
 
 ### confirm 消息确认机制（生产者）
+Confirm 模式是 RabbitMQ 提供的一种消息可靠性保障机制。当生产者通过 Confirm 模式发送消息时，它会等待 RabbitMQ 的确认，确保消息已经被正确地投递到了指定的 Exchange 中。
+消息正确投递到 queue 时，会返回 ack。
+消息没有正确投递到 queue 时，会返回 nack。如果 exchange 没有绑定 queue，也会出现消息丢失。
+
+* 生产者通过 confirm.select 方法将 Channel 设置为 Confirm 模式。
+* 发送消息后，通过添加 add_confirm_listener 方法，监听消息的确认状态。
+
+```java
+1.开启消息确认机制
+spring:
+  rabbitmq:
+        # 开启消息确认机制
+    publisher-confirms: true
+    # 消息在未被队列收到的情况下返回
+    #publisher-returns: true
+    #publisher-confirm-type: correlated
+ 
+2.消息未接收时调用ReturnCallback
+rabbitTemplate.setMandatory(true);
+ 
+3.生产者投递消息
+@Service
+public class ConfirmProvider implements RabbitTemplate.ConfirmCallback,RabbitTemplate.ReturnCallback {
+@Autowired
+    RabbitTemplate rabbitTemplate;
+@PostConstruct
+    public void init() {
+        rabbitTemplate.setReturnCallback(this);
+        rabbitTemplate.setConfirmCallback(this);
+    }
+@Override
+    public void confirm(CorrelationData correlationData, boolean ack, String cause) {
+        if(ack){
+            System.out.println("确认了这条消息："+correlationData);
+        }else{
+            System.out.println("确认失败了："+correlationData+"；出现异常："+cause);
+        }
+    }
+@Override
+    public void returnedMessage(Message message, int replyCode, String replyText, String exchange, String routingKey) {
+        System.out.println("这条消息发送失败了"+message+",请处理");
+    }
+public void publisMessage(String message){
+        rabbitTemplate.setMandatory(true);
+        rabbitTemplate.convertAndSend("javatrip",message);
+    }
+}
+ 
+4.如果消息确认失败后，我们可以进行消息补偿，也就是消息的重试机制。当未收到确认信息时进行消息的重新投递。设置如下配置即可完成。
+spring:
+  rabbitmq:
+    # 支持消息发送失败后重返队列
+    publisher-returns: true
+    # 开启消息确认机制
+    # publisher-confirm-type: correlated
+    listener:
+      simple:
+        retry:
+          # 开启重试
+          enabled: true
+          # 最大重试次数
+          max-attempts: 5
+          # 重试时间间隔
+```
 
 ---
 
 ### 消息持久化机制（RabbitMQ 服务）
+持久化机制是指将消息存储到磁盘，以保证在 RabbitMQ 服务器宕机或重启时，消息不会丢失。
+
+* 生产者通过将消息的 delivery_mode 属性设置为 2(SpringBoot中deliveryMode默认为MessageDeliveryMode.PERSISTENT 等于2)，将消息标记为持久化。
+* 队列也需要进行持久化设置，确保队列在 RabbitMQ 服务器重启后仍然存在。需要将durable属性设置为true，且需配合autoDelete设置为false
+
+> 持久化机制会影响性能，因此在需要确保消息不丢失的场景下使用。
+
+```java
+@Queue(value = "TianMingQ",durable = "true",autoDelete = "false")   //或者注入时
+return new Queue("TianMingQ", true, false, false, map);
+```
 
 ---
 
 ### ACK 事务机制（消费者）
+ACK 事务机制用于确保消息被正确消费。当消息被消费者成功处理后，消费者发送确认（ACK）给 RabbitMQ，告知消息可以被移除。这个过程是自动处理的，也可以关闭进行手工发送 ACK。
+
+* 在 RabbitMQ 中，ACK 机制默认是开启的。当消息被消费者接收后，会立即从队列中删除，除非消费者发生异常。
+* 可以手动开启 ACK 机制，通过将 auto_ack 参数设置为 False，手动控制消息的 ACK （acknowledge-mode: manual）。
+
+```java
+1.修改yml为手动签收模式
+spring:
+  rabbitmq:
+    listener:
+      simple:
+        # 手动签收模式
+        acknowledge-mode: manual
+        # 每次签收一条消息
+        prefetch: 1
+ 
+ 
+2.消费者手动签收
+@Component
+@RabbitListener(queuesToDeclare = @Queue(value = "TianMingQ", durable = "true"))
+public class SecondConsumer {
+@RabbitHandler
+    public void receive(String message, @Headers Map<String,Object> headers, Channel channel) throws Exception{
+System.out.println(message);
+        // 唯一的消息ID
+        Long deliverTag = (Long) headers.get(AmqpHeaders.DELIVERY_TAG);
+        // 确认该条消息
+        if(...){
+            channel.basicAck(deliverTag,false);
+        }else{
+            // 消费失败，消息重返队列
+            channel.basicNack(deliverTag,false,true);
+        }
+      
+    }
+```
+
+---
+
+## RabbitMQ中如何解决消息堆积问题
+1. 消费者处理消息的速度太慢
+   * 增加消费者数量：通过水平扩展，增加消费者的数量来提高处理能力。
+   * 优化消费者性能：提高消费者处理消息的效率，例如优化代码、增加资源。
+   * 消息预取限制(prefetch count)：调整消费者的预取数量以避免一次处理过多消息而导致处理缓慢。
+2. 队列的容量太小
+   * 增加队列的容量：调整队列设置以允许更多消息存储。
+3. 网络故障
+   * 监控和告警：通过监控网络状况并设置告警，确保在网络故障时快速发现并解决问题。
+   * 持久化和高可用性：确保消息和队列的持久化以避免消息丢失，并使用镜像队列提高可用性。
+4. 消费者故障
+   * 使用死信队列：将无法处理的消息转移到死信队列，防止堵塞主队列。
+   * 容错机制：实现消费者的自动重启和错误处理逻辑。
+5. 队列配置不当
+   * 优化队列配置：检查并优化消息确认模式、队列长度限制和其他相关配置。
+6. 消息大小
+   * 消息分片：将大型消息分割成小的消息片段，加快处理速度。
+7. 业务逻辑复杂或耗时
+   * 优化业务逻辑：简化消费者中的业务逻辑，减少处理每个消息所需的时间。
+8. 消息产生速度快于消费速度
+   * 使用消息限流：控制消息的生产速度，确保它不会超过消费者的处理能力。
+   * 负载均衡：确保消息在消费者之间公平分配，避免个别消费者过载。
+9. 其他配置优化
+   * 消息优先级：使用消息优先级确保高优先级消息优先处理。
+   * 调整RabbitMQ配置：优化RabbitMQ服务的配置，如文件描述符限制、内存使用限制等。
+
+---
+
+## RabbitMQ中如何保证消息不被重复消费
+
+---
+
+### 什么情况会导致消息被重复消费
+* 生产者：生产者可能会重复推送一条数据到 MQ 中，比如 Controller 接口被重复调用了 2 次，没有做接口幂等性导致的；
+* MQ：在消费者消费完准备响应 ack 消息消费成功时，MQ 突然挂了，导致 MQ 以为消费者还未消费该条数据，MQ 恢复后再次推送了该条消息，导致了重复消费。
+* 消费者：消费者已经消费完消息，正准备但是还未响应给ack消息到时，此时消费者挂了，服务重启后 MQ 以为消费者还没有消费该消息，再次推送了该条消息。
+
+---
+
+### 解决方案
+* 使用乐观锁  
+假设是更新订单状态，在发送的消息的时候带上修改字段的版本号
+* 简单的消息去重，插入消费记录，增加数据库判断
+![](http://alexali.oss-cn-guangzhou.aliyuncs.com/pasteimageintomarkdown/2025-05-09/47133198851916.png?Expires=4900405344&OSSAccessKeyId=LTAI5tBX2zkmA8G3Aw5HNqtH&Signature=uYwXXAXcCf85yzt9Qw3vSxnhY8U%3D)
+  * 这个消费者的代码执行需要1秒，重复消息在执行期间（假设100毫秒）内到达（例如生产者快速重发，Broker重启等），增加校验的地方是不是还是没数据（因为上一条消息还没消费完，没有记录）
+  * 那么就会穿透掉检查的挡板，最后导致重复的消息消费逻辑进入到非幂等安全的业务代码中，从而引发重复消费的问题
+
