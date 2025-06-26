@@ -59,14 +59,14 @@
    cp redis.conf redis.conf.bck
    ```
    
-   修改配置
-   
-   ```bash
-   vim redis.conf
-   ```
    创建文件夹保存持久化文件以及日志
    ```bash
    mkdir rdb
+   ```
+   
+   修改配置
+   ```bash
+   vim redis.conf
    ```
    
    搜索功能：/+要搜索的内容，n：下一个搜索结果，N：上一个搜索结果

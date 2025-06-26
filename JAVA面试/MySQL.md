@@ -888,7 +888,37 @@ SELECT * FROM person order by name desc;
 
 ---
 
-## Binlog有几种录入格式与区别
+## MySQL三大日志(binlog、redolog和undolog)
+
+---
+
+### redolog
+
+redo log（重做日志）是 InnoDB 存储引擎独有的，它让 MySQL 拥有了崩溃恢复能力。比如 MySQL 实例挂了或宕机了，重启时，InnoDB 存储引擎会使用 redo log 恢复数据，保证数据的持久性与完整性。
+
+![](http://alexali.oss-cn-guangzhou.aliyuncs.com/pasteimageintomarkdown/2025-05-22/400574371164041.png?Expires=4901480346&OSSAccessKeyId=LTAI5tBX2zkmA8G3Aw5HNqtH&Signature=AZCG6dSeIuQXSs6ad12cxV6ESfY%3D)
+
+MySQL 中数据是以页为单位，你查询一条记录，会从硬盘把一页的数据加载出来，加载出来的数据叫数据页，会放入到 Buffer Pool 中。
+
+后续的查询都是先从 Buffer Pool 中找，没有命中再去硬盘加载，减少硬盘 IO 开销，提升性能。
+
+更新表数据的时候，也是如此，发现 Buffer Pool 里存在要更新的数据，就直接在 Buffer Pool 里更新。
+
+然后会把“在某个数据页上做了什么修改”记录到重做日志缓存（redo log buffer）里，接着刷盘到 redo log 文件里。
+
+---
+
+### binlog
+
+redo log 它是物理日志，记录内容是“在某个数据页上做了什么修改”，属于 InnoDB 存储引擎。
+
+而 binlog 是逻辑日志，记录内容是语句的原始逻辑，类似于“给 ID=2 这一行的 c 字段加 1”，属于MySQL Server 层。
+
+不管用什么存储引擎，只要发生了表数据更新，都会产生 binlog 日志。
+
+---
+
+#### Binlog有几种录入格式与区别
 * **Statement**格式  
   将SQL语句本身记录到Binlog中。记录的是在主库上执行的SQL语句，从库通过解析并执行相同的SQL来达到复制的目的。  
   在某些情况下，由于执行计划或函数等因素的影响，相同的SQL语句在主从库上执行结果可能不一致，导致复制错误。简单、易读，节省存储空间。
@@ -898,6 +928,16 @@ SELECT * FROM person order by name desc;
 * **Mixed**格式  
   Statement格式和Row格式的结合，MySQL自动选择适合的格式。大多数情况下使用Statement格式进行记录，但对于无法保证安全复制的情况，如使用非确定性函数、触发器等，会自动切换到Row格式进行记录。  
   结合了两种格式的优势，既减少了存储空间的占用，又保证了复制的准确性。
+
+---
+
+### undolog
+
+每一个事务对数据的修改都会被记录到 undo log ，当执行事务过程中出现错误或者需要执行回滚操作的话，MySQL 可以利用 undo log 将数据恢复到事务开始之前的状态。
+
+undo log 属于逻辑日志，记录的是 SQL 语句，比如说事务执行一条 DELETE 语句，那 undo log 就会记录一条相对应的 INSERT 语句。
+
+同时，undo log 的信息也会被记录到 redo log 中，因为 undo log 也要实现持久性保护。并且，undo-log 本身是会被删除清理的，例如 INSERT 操作，在事务提交之后就可以清除掉了；UPDATE/DELETE 操作在事务提交不会立即删除，会加入 history list，由后台线程 purge 进行清理。
 
 ---
 
@@ -1134,8 +1174,8 @@ select * from t_order_2 order by time asc limit 0,1010;
 ```
 
 > 该方案的缺点非常明显：  
-> 随着页码的增加，每个节点返回的数据会增多，性能非常低  
-> 服务层需要进行二次排序，增加了服务层的计算量，如果数据过大，对内存和CPU的要求也非常高
+> * 随着页码的增加，每个节点返回的数据会增多，性能非常低  
+> * 服务层需要进行二次排序，增加了服务层的计算量，如果数据过大，对内存和CPU的要求也非常高
 
 ---
 
@@ -1151,10 +1191,8 @@ select * from t_order_2 where time>10010 order by time asc limit 10;
 ```
 
 > 同样是需要在内存中再次进行重新排序，最后取出前10条数据。  
-> 
-> 但是好处就是不用返回前面的全部数据了，只需要返回一页数据，在页数很大的情况下也是一样，在性能上的提升非常大  
-> 
-> 此种方案的缺点也是非常明显：不能跳页查询，只能一页一页地查询，比如说从第一页直接跳到第五页，因为无法获取到第四页的最大值，所以这种跳页查询肯定是不行的。
+> * 好处就是不用返回前面的全部数据了，只需要返回一页数据，在页数很大的情况下也是一样，在性能上的提升非常大  
+> * 缺点也是非常明显：不能跳页查询，只能一页一页地查询，比如说从第一页直接跳到第五页，因为无法获取到第四页的最大值，所以这种跳页查询肯定是不行的。
 
 ---
 
@@ -1173,6 +1211,8 @@ select * from t_order_1 order by time asc limit 500,5;
 
 select * from t_order_2 order by time asc limit 500,5;
 ```
+
+> 完全属于模糊查询，不能视为精确数据。
 
 ---
 

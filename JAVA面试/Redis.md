@@ -3,11 +3,17 @@
 ---
 
 ## Redis数据类型
-参考：https://redis.com.cn/commands.html
+参考：https://redis.com.cn/redis-data-types.html
+
+* 字符串（string）
+* 哈希（hash）
+* 列表（list）
+* 集合（set）
+* 有序集合（sorted set）
 
 ---
 
-### BitMap
+### BitMap（位图）
 
 ---
 
@@ -182,7 +188,7 @@ redis> GETBIT sign-result 1024
 
 ---
 
-### HyperLogLog
+### HyperLogLog（基数统计）
 某宝有数亿的用户，那么对于某个页面，怎么使用Redis来统计一个网站的用户访问数呢？
 如果所需要的数量不用那么准确，可以使用概率算法。 事实上，我们对一个网站的UV的统计，1亿跟1亿零30万其实是差不多的。
 
@@ -366,10 +372,10 @@ Redis中同时使用了惰性过期和定期过期两种过期策略。
 ### 逐出策略
 
 * noeviction（默认，直接拒绝）：不删除任何Key，当内存达到上限时，将无法写入新数据，数据库会返回错误信息。
-* volatile-lru（过期LRU）：从已设置过期时间（Expire）的Key中，删除最近最少使用的Key（LRU算法），且不会考虑Key是否已经过期。
-* allkeys-lru（全局LRU）：从所有Key中，删除最近最少使用的Key（LRU算法）。
-* volatile-lfu（过期LFU）：从已设置过期时间（Expire）的Key中，删除最不常用的Key（LFU算法）。
-* allkeys-lfu（全局LFU）：从所有Key中，删除最不常用的Key（LFU算法）。
+* volatile-lru（过期LRU）：从已设置过期时间（Expire）的Key中，删除最近未使用的Key（按最后使用时间最远），且不会考虑Key是否已经过期。
+* allkeys-lru（全局LRU）：从所有Key中，删除最近未使用的Key（按最后使用时间最远）。
+* volatile-lfu（过期LFU）：从已设置过期时间（Expire）的Key中，删除最不常用的Key（按使用次数最少）。
+* allkeys-lfu（全局LFU）：从所有Key中，删除最不常用的Key（按使用次数最少）。
 * volatile-random（过期随机）：从已设置过期时间（Expire）的Key中，随机删除一些Key。
 * allkeys-random（全局随机）：从所有Key中，随机删除一些Key。
 * volatile-ttl（过期时间）：从已设置过期时间（Expire）的Key中，根据存活时间（TTL）从小到大排序进行删除。

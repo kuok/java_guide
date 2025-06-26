@@ -2,6 +2,46 @@
 
 ---
 
+## 为什么说 Java 语言“编译与解释并存”？
+我们可以将高级编程语言按照程序的执行方式分为两种：
+* 编译型：编译型语言会通过编译器将源代码一次性翻译成可被该平台执行的机器码。一般情况下，编译语言的执行速度比较快，开发效率比较低。常见的编译性语言有 C、C++、Go、Rust 等等。
+* 解释型：解释型语言会通过解释器一句一句的将代码解释（interpret）为机器代码后再执行。解释型语言开发效率比较快，执行速度比较慢。常见的解释性语言有 Python、JavaScript、PHP 等等。
+
+Java 语言既具有编译型语言的特征，也具有解释型语言的特征。因为 Java 程序要经过先编译，后解释两个步骤，由 Java 编写的程序需要先经过编译步骤，生成字节码（.class 文件），这种字节码必须由 Java 解释器来解释执行。
+
+---
+
+### AOT 有什么优点？为什么不全部使用 AOT 呢？
+JDK 9 引入了一种新的编译模式 AOT(Ahead of Time Compilation) 。和 JIT 不同的是，这种编译模式会在程序被执行前就将其编译成机器码，属于静态编译（C、 C++，Rust，Go 等语言就是静态编译）。AOT 避免了 JIT 预热等各方面的开销，可以提高 Java 程序的启动速度，避免预热时间长。并且，AOT 还能减少内存占用和增强 Java 程序的安全性（AOT 编译后的代码不容易被反编译和修改），特别适合云原生场景。
+
+![](http://alexali.oss-cn-guangzhou.aliyuncs.com/pasteimageintomarkdown/2025-05-24/510557490934250.png?Expires=4901668782&OSSAccessKeyId=LTAI5tBX2zkmA8G3Aw5HNqtH&Signature=PXZ7EVPQIEmHpW9HPB5Dh0VBBuQ%3D)
+
+AOT 的主要优势在于启动时间、内存占用和打包体积。JIT 的主要优势在于具备更高的极限处理能力，可以降低请求的最大延迟。
+
+AOT 更适合当下的云原生场景，对微服务架构的支持也比较友好。除此之外，AOT 编译无法支持 Java 的一些动态特性，如反射、动态代理、动态加载、JNI（Java Native Interface）等。然而，很多框架和库（如 Spring、CGLIB）都用到了这些特性。如果只使用 AOT 编译，那就没办法使用这些框架和库了，或者说需要针对性地去做适配和优化。举个例子，CGLIB 动态代理使用的是 ASM 技术，而这种技术大致原理是运行时直接在内存中生成并加载修改后的字节码文件也就是 .class 文件，如果全部使用 AOT 提前编译，也就不能使用 ASM 技术了。为了支持类似的动态特性，所以选择使用 JIT 即时编译器。
+
+---
+
+## 自增自减
+
+```java
+int a = 9;
+int b = a++;//a=10,b=9
+int c = ++a;//a=11,c=11
+int d = c--;//c=10,d=11
+int e = --d;//d=10,e=10
+```
+
+答案：a = 11 、b = 9 、 c = 10 、 d = 10 、 e = 10。
+
+---
+
+## 浅拷贝、深拷贝、引用拷贝
+
+![](http://alexali.oss-cn-guangzhou.aliyuncs.com/pasteimageintomarkdown/2025-05-24/511817875856916.png?Expires=4901670042&OSSAccessKeyId=LTAI5tBX2zkmA8G3Aw5HNqtH&Signature=EfXxqySZ%2BRniKej5MQN4jLNZWHQ%3D)
+
+---
+
 ## 基础
 
 ---
@@ -484,6 +524,12 @@ static final int MIN_TREEIFY_CAPACITY = 64;
 
 ---
 
+### HashMap线程安全
+HashMap 有可能会发生死循环并且造成 CPU 100% ，这种情况发生最主要的原因就是在扩容的时候，也就是内部新建新的 HashMap 的时候，扩容的逻辑会反转散列桶中的节点顺序，当有多个线程同时进行扩容的时候，由于 HashMap 并非线程安全的，所以如果两个线程同时反转的话，便可能形成一个循环，并且这种循环是链表的循环，相当于 A 节点指向 B 节点，B 节点又指回到 A 节点，这样一来，在下一次想要获取该 key 所对应的 value 的时候，便会在遍历链表的时候发生永远无法遍历结束的情况，也就发生 CPU 100% 的情况。
+所以综上所述，HashMap 是线程不安全的，在多线程使用场景中推荐使用线程安全同时性能比较好的 ConcurrentHashMap。
+
+---
+
 ## BigDecimal
 
 ---
@@ -510,5 +556,116 @@ bigDecimal2 = 0.01
 ```
 
 ---
+
+## 异常
+
+![](http://alexali.oss-cn-guangzhou.aliyuncs.com/pasteimageintomarkdown/2025-05-24/514866581162958.png?Expires=4901673707&OSSAccessKeyId=LTAI5tBX2zkmA8G3Aw5HNqtH&Signature=Dxbd2NTenP0omm8iq7Awz3nJPBM%3D)
+
+* Exception :程序本身可以处理的异常，可以通过 catch 来进行捕获。Exception 又可以分为 Checked Exception (受检查异常，必须处理) 和 Unchecked Exception (不受检查异常，可以不处理)。
+  * Checked Exception 即 受检查异常 ，Java 代码在编译过程中，如果受检查异常没有被 catch或者throws 关键字处理的话，就没办法通过编译。
+    > 常见的受检查异常有：IO 相关的异常、ClassNotFoundException、SQLException...。
+  * Unchecked Exception 即 不受检查异常 ，Java 代码在编译过程中 ，我们即使不处理不受检查异常也可以正常通过编译。
+    > RuntimeException 及其子类都统称为非受检查异常，常见的有：
+    > * NullPointerException(空指针错误)
+    > * IllegalArgumentException(参数错误比如方法入参类型错误)
+    > * NumberFormatException（字符串转换为数字格式错误，IllegalArgumentException的子类）
+    > * ArrayIndexOutOfBoundsException（数组越界错误）
+    > * ClassCastException（类型转换错误）
+    > * ArithmeticException（算术错误）
+* Error：Error 属于程序无法处理的错误 ，我们没办法通过 catch 来进行捕获不建议通过catch捕获 。例如 Java 虚拟机运行错误（Virtual MachineError）、虚拟机内存不够错误(OutOfMemoryError)、类定义错误（NoClassDefFoundError）等 。这些异常发生时，Java 虚拟机（JVM）一般会选择线程终止。
+
+---
+
+## finally 中的代码一定会执行吗？
+
+在某些情况下，finally 中的代码不会被执行。
+* 虚拟机被终止运行。`System.exit(1);`
+* 程序所在的线程死亡。
+* 关闭CPU。
+
+## 使用 try-with-resources 代替try-catch-finally
+
+Java 中类似于InputStream、OutputStream、Scanner、PrintWriter等的资源都需要我们调用close()方法来手动关闭，一般情况下我们都是通过try-catch-finally语句来实现这个需求，如下：
+```java
+//读取文本文件的内容
+Scanner scanner = null;
+try {
+    scanner = new Scanner(new File("D://read.txt"));
+    while (scanner.hasNext()) {
+        System.out.println(scanner.nextLine());
+    }
+} catch (FileNotFoundException e) {
+    e.printStackTrace();
+} finally {
+    if (scanner != null) {
+        scanner.close();
+    }
+}
+```
+使用 Java 7 之后的 try-with-resources 语句改造上面的代码:
+```java
+try (Scanner scanner = new Scanner(new File("test.txt"))) {
+    while (scanner.hasNext()) {
+        System.out.println(scanner.nextLine());
+    }
+} catch (FileNotFoundException e) {
+    e.printStackTrace();
+}
+```
+* 适用范围（资源的定义）： 任何实现 java.lang.AutoCloseable或者 java.io.Closeable 的对象关闭资源和 
+* finally 块的执行顺序： 在 try-with-resources 语句中，任何 catch 或 finally 块在声明的资源关闭后运行
+
+> 面对必须要关闭的资源，我们总是应该优先使用 try-with-resources 而不是try-finally。随之产生的代码更简短，更清晰，产生的异常对我们也更有用。try-with-resources语句让我们更容易编写必须要关闭的资源的代码，若采用try-finally则几乎做不到这点。
+
+---
+
+## SPI 和 API
+* SPI（Service Provider Interface） 是一种 Java 的扩展机制，用于实现模块化开发。它允许应用程序定义接口，并通过配置文件来加载具体的实现类。
+  > 当接口存在于调用方这边时，这就是 SPI 。由接口调用方确定接口规则，然后由不同的厂商根据这个规则对这个接口进行实现，从而提供服务。
+
+  ```java
+  // Logger接口
+  public interface Logger {
+      void log(String message);
+  }
+  
+  // FileLogger实现类
+  public class FileLogger implements Logger {
+      public void log(String message) {
+          // 将日志消息写入文件
+      }
+  }
+  
+  // ConsoleLogger实现类
+  public class ConsoleLogger implements Logger {
+      public void log(String message) {
+          // 在控制台打印日志消息
+      }
+  }
+  
+  // META-INF/services/com.example.Logger配置文件内容
+  com.example.FileLogger
+  com.example.ConsoleLogger
+  
+  // 加载和使用日志实现类的代码
+  ServiceLoader<Logger> loader = ServiceLoader.load(Logger.class);
+  for (Logger logger : loader) {
+      logger.log("Hello, SPI!");
+  }
+  ```
+* API（Application Programming Interface） 是一组预定义的函数、方法或协议，用于在软件系统中进行交互。API 定义了如何使用某个软件库或框架提供的功能。
+  > 当实现方提供了接口和实现，我们可以通过调用实现方的接口从而拥有实现方给我们提供的能力，这就是 API。这种情况下，接口和实现都是放在实现方的包中。调用方通过接口调用实现方的功能，而不需要关心具体的实现细节。
+
+
+
+
+
+
+
+
+
+
+
+
 
 

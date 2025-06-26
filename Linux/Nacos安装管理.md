@@ -47,9 +47,9 @@
    **NACOS_AUTH_TOKEN**:**nacos.core.auth.plugin.nacos.token.secret.key**
    **NACOS_AUTH_IDENTITY_KEY**:**nacos.core.auth.server.identity.key**
    **NACOS_AUTH_IDENTITY_VALUE**:**nacos.core.auth.server.identity.value**
-   
+
    ```bash
-   docker run --name nacos-standalone -e MODE=standalone -e NACOS_AUTH_ENABLE=true -e NACOS_AUTH_TOKEN='QWxleG5hY29zdG9rZW4xMjM0NTY3ODkxMDExMTIxMzE=' -e NACOS_AUTH_IDENTITY_KEY='nacos' -e NACOS_AUTH_IDENTITY_VALUE='kuok1995GDD' -v /path/application.properties:/app/nacos/application.properties -p 8848:8848 -d -p 9848:9848  nacos/nacos-server:latest
+   docker run --name nacos-standalone -e MODE=standalone -e NACOS_AUTH_ENABLE=true -e NACOS_AUTH_TOKEN='WGJueWRRRERZTnVjeXJqNTdtM2RhbkpwNDVZQ3NNa0g=' -e NACOS_AUTH_IDENTITY_KEY='key' -e NACOS_AUTH_IDENTITY_VALUE='value' -v /path/application.properties:/app/nacos/application.properties -p 8848:8848 -d -p 9848:9848  nacos/nacos-server:latest
    ```
 
 5. 防火墙
@@ -82,7 +82,7 @@ Docker部署后一直退出，估计是太占用内存了，改为本地部署�
    unzip nacos-server-$version.zip 
    ```
    
-   再上传配置文件，开启鉴权
+   修改nacos/conf/application.properties文件中以下值。
    
     ```propertie
     spring.sql.init.platform=mysql
@@ -94,35 +94,30 @@ Docker部署后一直退出，估计是太占用内存了，改为本地部署�
     nacos.core.auth.plugin.nacos.token.secret.key=base64编码后的token
     nacos.core.auth.server.identity.key=nacos
     nacos.core.auth.server.identity.value=密码（尽量与控制台登陆密码一致）
-    
-    ### If turn on auth system:
-    nacos.core.auth.system.type=nacos
-    nacos.core.auth.enabled=true
     ```
 
 3. 启动  
-   进入bin文件夹
    
     ```bash
-    sh startup.sh -m standalone
+    sh nacos/bin/startup.sh -m standalone
     ```
    
    登陆控制台页面，应该可以登陆了
    
     ```text
-    http://tencent.server:8848/nacos/
+    http://tencent.server:8080
     ```
    
    查看日志
    
     ```bash
-    tail -fn200 /app/nacos/nacos/logs/start.out
+    tail -fn200 /app/nacos/
     ```
    
    停止
    
     ```bash
-    sh shutdown.sh
+    sh nacos/bin/shutdown.sh
     ```
    
    其他
@@ -160,20 +155,20 @@ Docker部署后一直退出，估计是太占用内存了，改为本地部署�
    
    输入以下信息，注意是单机模式，且需要指定JAVA_HOME
    
-    ```properties
-    [Unit]
-    Description=Nacos service
-    After=network.target
-    
-    [Service]
-    Type=forking
-    Environment="JAVA_HOME=/app/java/jdk-21.0.6"
-    ExecStart=/bin/bash /app/nacos/nacos/bin/startup.sh  -m standalone  #启动命令 启动脚本换成自己对应的目录即可
-    ExecStop=/bin/bash /app/nacos/nacos/bin/shutdown.sh #停止命令 停止脚本换成自己对应的目录即可
-    
-    [Install]
-    WantedBy=multi-user.target
-    ```
+   ```properties
+   [Unit]
+   Description=nacos.service
+   After=network.target
+   
+   [Service]
+   Type=forking
+   Environment="JAVA_HOME=/app/java/jdk-21.0.6"
+   ExecStart=/bin/bash /app/nacos/nacos/bin/startup.sh  -m standalone  #启动命令 启动脚本换成自己对应的目录即可
+   ExecStop=/bin/bash /app/nacos/nacos/bin/shutdown.sh #停止命令 停止脚本换成自己对应的目录即可
+   
+   [Install]
+   WantedBy=multi-user.target
+   ```
    
    重新加载文件
    

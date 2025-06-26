@@ -21,7 +21,7 @@
    ```
    
    ```bash
-   sudo yum install erlang-23.3.4.11-1.el7.x86_64
+   sudo yum install -y erlang-23.3.4.11-1.el7.x86_64
    ```
    
    ```bash
@@ -35,7 +35,7 @@
    ```
    
    ```bash
-   sudo yum install rabbitmq-server-3.8.16-1.el7.noarch
+   sudo yum install -y rabbitmq-server-3.8.16-1.el7.noarch
    ```
    
    安装管理界面

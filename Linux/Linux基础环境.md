@@ -41,7 +41,7 @@
    ```bash
    vim /etc/profile
    ```
-   
+
    在末尾添加以下变量
    
    ```vim

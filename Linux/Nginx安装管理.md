@@ -13,6 +13,10 @@
    ```
 
 2. 按照官网写配置文件
+
+   ```bash
+   vim docker-compose.yml
+   ```
    
    ```yaml
    services:
@@ -30,10 +34,10 @@
        environment:
          # Uncomment this if you want to change the location of
          # the SQLite DB file within the container
-         # DB_SQLITE_FILE: "/data/database.sqlite"
+         # DB_SQLITE_FILE: "/app/nginxproxymanager/data/database.sqlite"
    
          # Uncomment this if IPv6 is not enabled on your host
-         # DISABLE_IPV6: 'true'
+         DISABLE_IPV6: 'false'
    
        volumes:
          - ./data:/data

@@ -85,6 +85,25 @@ getconf LONG_BIT
 
 centOS默认开启了防火墙，安装软件后需要将对应端口开放才能外网访问。
 
+```bash
+firewall-cmd --add-port=22/tcp --permanent
+firewall-cmd --add-port=80/tcp --permanent
+firewall-cmd --add-port=443/tcp --permanent
+firewall-cmd --add-port=3306/tcp --permanent    #mysql
+firewall-cmd --add-port=5432/tcp --permanent    #postgresql
+firewall-cmd --add-port=5672/tcp --permanent    #rabbitmq
+firewall-cmd --add-port=15672/tcp --permanent   #rabbitmq
+firewall-cmd --add-port=8090/tcp --permanent    #halo
+firewall-cmd --add-port=8080/tcp --permanent    #tomcat
+firewall-cmd --add-port=6379/tcp --permanent    #redis
+firewall-cmd --add-port=8848/tcp --permanent    #nacos
+firewall-cmd --add-port=9848/tcp --permanent    #nacos
+firewall-cmd --add-port=9849/tcp --permanent    #nacos
+firewall-cmd --add-port=7848/tcp --permanent    #nacos
+firewall-cmd --add-port=3000/tcp --permanent    #3000数据库
+firewall-cmd --reload
+```
+
 ---
 
 ### 与docker的冲突
@@ -107,6 +126,7 @@ firewall-cmd --list-port --zone=docker
 安装docker后开放常用端口
 
 ```bash
+firewall-cmd --zone=docker --add-port=22/tcp --permanent
 firewall-cmd --zone=docker --add-port=80/tcp --permanent
 firewall-cmd --zone=docker --add-port=443/tcp --permanent
 firewall-cmd --zone=docker --add-port=3306/tcp --permanent    #mysql
@@ -370,6 +390,29 @@ w
 
 ---
 
+### 踢出其他用户
+使用w命令查看当前用户
+```bash
+[root@localhost ~]# w
+ 06:41:24 up 12 min,  2 users,  load average: 0.00, 0.01, 0.03
+USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+root     tty1                      06:29   11:24   0.02s  0.02s -bash
+root     pts/0    192.168.1.34     06:41    3.00s  0.01s  0.01s w
+```
+
+使用`pkill -kill -t TTY值`踢出指定用户
+```bash
+pkill -kill -t tty1
+```
+```bash
+[root@localhost ~]# w
+ 06:42:14 up 12 min,  1 user,  load average: 0.00, 0.01, 0.03
+USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+root     pts/0    192.168.1.34     06:41    6.00s  0.01s  0.00s w
+```
+
+---
+
 ### 用新用户代替root用户登录
 
 创建新用户
@@ -392,7 +435,7 @@ cd /etc/ssh/ && cp sshd_config sshd_config.bakup
 ```
 
 ```bash
-vi sshd_config
+vi /etc/ssh/sshd_config
 ```
 
 重启SSHD服务

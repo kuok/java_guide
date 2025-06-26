@@ -69,11 +69,40 @@
    sudo yum install -y mysql-community-server
    ```
    
-   可能出现问题1,改为如下命令
+   可能出现问题：GPG Keys are configured as: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-mysql  
+   遇到GPG错误通常是因为软件包的签名验证失败。这可能是由于多种原因，包括密钥过期、密钥未安装或配置错误。  
+   安装时禁用GPG检查
    
-    ```bash
-    sudo yum install -y mysql-community-server --nogpgcheck
-    ```
+   ```bash
+   sudo yum install -y mysql-community-server --nogpgcheck
+   ```
+   
+   但后续还是会导致出现这个签名问题。
+   > https://dev.mysql.com/doc/refman/8.0/en/checking-rpm-signature.html
+
+   所以先检查包
+   
+   ```bash
+   rpm --checksig  /var/cache/yum/x86_64/7/mysql80-community/packages/mysql80-community-release-el7-11.noarch.rpm
+   ```
+   
+   ```bash
+   [root@localhost postgresql]#  rpm --checksig  /var/cache/yum/x86_64/7/mysql80-community/packages/mysql80-community-release-el7-11.noarch.rpm
+   /var/cache/yum/x86_64/7/mysql80-community/packages/mysql80-community-release-el7-11.noarch.rpm: RSA sha1 (MD5) PGP md5 不正确
+   ```
+   
+   导入官方密钥
+
+   ```bash
+   rpm --import https://repo.mysql.com/RPM-GPG-KEY-mysql-2022
+   ```
+   
+   再检查密钥已确定
+   
+   ```bash
+   [root@localhost postgresql]#  rpm --checksig  /var/cache/yum/x86_64/7/mysql80-community/packages/mysql80-community-release-el7-11.noarch.rpm
+   /var/cache/yum/x86_64/7/mysql80-community/packages/mysql80-community-release-el7-11.noarch.rpm: rsa sha1 (md5) pgp md5 确定
+   ```
 
 10. 启动MySQL
     
@@ -125,7 +154,7 @@
     2025-03-11T10:01:24.744631Z 6 [Note] [MY-010454] [Server] A temporary password is generated for root@localhost: .,.LE5psXu6E
     ```
     
-    使用初始密码登录`rX/Ro,XIo8dm`
+    使用初始密码登录`.,.LE5psXu6E`
     
     ```bash
     mysql -u root -p
@@ -143,6 +172,9 @@
     
     ```sql
     use mysql;
+    ```
+
+    ```sql
     update user set host='%' where user='root';
     ```
     
@@ -150,6 +182,12 @@
     
     ```sql
     GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;
+    ```
+    
+    > 5.7版本赋予远程连接权限语句不同，需加上密码
+    
+    ```sql
+    GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY '你的密码' WITH GRANT OPTION;
     ```
     
     如果你想只为特定IP地址授权远程访问
@@ -178,23 +216,3 @@
     ```
     
     测试连接成功。
-
----
-
-### 问题
-
-1. GPG Keys are configured as: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-mysql  
-   遇到GPG错误通常是因为软件包的签名验证失败。这可能是由于多种原因，包括密钥过期、密钥未安装或配置错误。  
-   安装时禁用GPG检查
-   
-   ```bash
-   sudo yum install -y mysql-community-server --nogpgcheck
-   ```
-
-2. 5.7版本赋予远程连接权限语句不同
-   
-   ```sql
-   GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY '你的密码' WITH GRANT OPTION;
-   ```
-
----
